@@ -21,7 +21,7 @@ class Users extends REST_Controller {
             );
         }else{
             $result = array(
-                'message' => 'Login failed!',
+                'message' => 'error',
                 'my_key' => null,
                 'status' => false
             );

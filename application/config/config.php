@@ -23,7 +23,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost:88/myapp_api/';
+$config['base_url'] = 'http://localhost:88/myapp_api';
 
 /*
 |--------------------------------------------------------------------------
@@ -324,7 +324,7 @@ $config['cache_query_string'] = FALSE;
 | https://codeigniter.com/user_guide/libraries/encryption.html
 |
 */
-$config['encryption_key'] = '';
+$config['encryption_key'] = 'myapp';
 
 /*
 |--------------------------------------------------------------------------
@@ -488,7 +488,9 @@ $config['compress_output'] = FALSE;
 | helper' page of the user guide for information regarding date handling.
 |
 */
+date_default_timezone_set('Asia/Manila');
 $config['time_reference'] = 'local';
+
 
 /*
 |--------------------------------------------------------------------------

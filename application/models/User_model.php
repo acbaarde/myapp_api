@@ -88,7 +88,7 @@ class User_model extends CI_Model{
             $this->db->trans_commit();
             $result = array(
                 'status' => true,
-                'token' => $access_token,
+                'access_token' => $access_token,
                 'expires_in' => $expires_in,
                 'user_id' => $user_id
             );
@@ -105,6 +105,13 @@ class User_model extends CI_Model{
             $result = false;
         }
         return $result;
+    }
+
+    public function get_active_user($data=array()){
+        $access_token = $data['access_token'];
+        $str = "select user.*,token.access_token from users as user left join users_access_token as token on token.user_id = user.id where token.access_token = '{$access_token}'";
+        $query = $this->db->query($str)->row_array();
+        return $query;
     }
 
 }

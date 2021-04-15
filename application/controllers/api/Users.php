@@ -14,8 +14,10 @@ class Users extends REST_Controller {
 
         $isLogin = $this->usermodel->login($this->input->post());
         if($isLogin['status'] == true){
-            $isLogin['message'] = 'You are now logged in!';
-            $result = $isLogin;
+            // $isLogin['message'] = 'You are now logged in!';
+            $active_user = $this->usermodel->get_active_user($isLogin);
+            $active_user['status'] = true;
+            $result = $active_user;
         }else{
             $result = array(
                 'message' => 'Invalid username or password',
@@ -52,9 +54,8 @@ class Users extends REST_Controller {
         echo json_encode($result);
     }
 
-    public function test_get(){
-
-        echo json_encode(date('h:i:s'));
+    public function getUser_post(){
+        echo json_encode($this->usermodel->get_active_user($this->input->post()));
     }
 
 }

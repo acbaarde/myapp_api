@@ -58,4 +58,7 @@ class Users extends REST_Controller {
         echo json_encode($this->usermodel->get_active_user($this->input->post()));
     }
 
+    public function test_get(){
+        echo json_encode("TEST");
+    }
 }

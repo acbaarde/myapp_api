@@ -81,7 +81,7 @@ $db['default'] = array(
 	'database' => 'myapp_db',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
-	'port' => 3306,
+	'port' => 3307,
 	'pconnect' => FALSE,
 	'db_debug' => (ENVIRONMENT !== 'production'),
 	'cache_on' => FALSE,

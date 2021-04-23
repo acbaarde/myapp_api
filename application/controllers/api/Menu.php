@@ -25,7 +25,8 @@ class Menu extends REST_Controller {
                 array_push($data['menu'], [
                     'menu_code' => $row1['mod_code1'],
                     'menu_title' => $row1['mod_name1'],
-                    'sub_menu' => []
+                    'menu_icon' => $row1['mod_icon1'],
+                    'sub_menus' => []
                 ]);
 
                 // $str = "select * from module_menu where mod_code1 = " . $this->db->escape($row1['mod_code1']) . " and mod_code2 != '' and `active` = 'A' GROUP BY mod_code2 order by mod_code2 ";
@@ -34,10 +35,12 @@ class Menu extends REST_Controller {
                 if($query->num_rows() > 0){
                     $rows = $query->result_array();
                     foreach($rows as $key2=>$row2){
-                        array_push($data['menu'][$key1]['sub_menu'],[
+                        array_push($data['menu'][$key1]['sub_menus'],[
                             'menu_code' => $row2['mod_code2'],
                             'menu_title' => $row2['mod_name2'],
-                            'sub_menu' => []
+                            'menu_icon' => $row1['mod_icon2'],
+                            'menu_path' => $row2['mod_url2'],
+                            'sub_menus' => []
                         ]);
                         
                         // $str = "select * FROM module_menu WHERE mod_code1 = " . $this->db->escape($row1['mod_code1']) . " and mod_code2 = " . $this->db->escape($row2['mod_code2']) . " AND mod_code3 != '' AND `active` = 'A' ORDER BY mod_code3";
@@ -46,7 +49,7 @@ class Menu extends REST_Controller {
                         if($query->num_rows() > 0){
                             $rows = $query->result_array();
                             foreach($rows as $key3=>$row3){
-                                array_push($data['menu'][$key1]['sub_menu'][$key2]['sub_menu'],[
+                                array_push($data['menu'][$key1]['sub_menus'][$key2]['sub_menus'],[
                                     'menu_code' => $row3['mod_code3'],
                                     'menu_title' => $row3['mod_name3']
                                 ]);

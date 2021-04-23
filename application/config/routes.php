@@ -56,3 +56,5 @@ $route['translate_uri_dashes'] = FALSE;
 $route['register'] = '/api/users/register';
 $route['login'] = '/api/users/login';
 $route['test'] = '/api/users/test';
+
+$route['user/getUser'] = '/api/users/getUser';

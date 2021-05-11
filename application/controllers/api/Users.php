@@ -14,13 +14,13 @@ class Users extends REST_Controller {
 
         $isLogin = $this->usermodel->login($this->input->post());
         if($isLogin['status'] == true){
-            // $isLogin['message'] = 'You are now logged in!';
-            $active_user = $this->usermodel->get_active_user($isLogin);
+            $active_user = $this->usermodel->get_active_user($isLogin['id']);
+            $active_user['message'] = 'Login Successful!';
             $active_user['status'] = true;
             $result = $active_user;
         }else{
             $result = array(
-                'message' => 'Invalid username or password',
+                'message' => 'Invalid username or password!!!',
                 'status' => false
             );
         }
@@ -28,7 +28,7 @@ class Users extends REST_Controller {
         echo json_encode($result);
     }
 
-    public function register_post(){
+    public function registerUser_post(){
         $isExist = $this->usermodel->checkuser($this->input->post('username'));
         if($isExist == false){
             $register = $this->usermodel->register($this->input->post());
@@ -58,7 +58,44 @@ class Users extends REST_Controller {
         echo json_encode($this->usermodel->get_active_user($this->input->post()));
     }
 
-    public function test_get(){
-        echo json_encode("TEST");
+    public function getAllUser_get(){
+        echo json_encode($this->db->get('users')->result());
     }
+
+    public function testpost_post(){
+        echo json_encode($this->input->post());
+    }
+
+    public function deleteUser_post(){
+        $affected_rows = $this->usermodel->delete_user($this->input->post());
+        if($affected_rows == 1){
+            $result = array(
+                'message' => 'User deletion success!',
+                'status' => true
+            );
+        }else{
+            $result = array(
+                'message' => 'Error: Something happened!',
+                'status' => false
+            );
+        }
+        echo json_encode($result);
+    }
+
+    public function updateUser_post(){
+        $update = $this->usermodel->update_user($this->input->post());
+        if($update == true){
+            $result = array(
+                'message' => 'User update success!',
+                'status' => true
+            );
+        }else{
+            $result = array(
+                'message' => 'Error: Something happened!',
+                'status' => false
+            );
+        }
+        echo json_encode($result);
+    }
+    
 }

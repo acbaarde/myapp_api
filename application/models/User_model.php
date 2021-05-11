@@ -22,13 +22,17 @@ class User_model extends CI_Model{
                 $this->db->trans_rollback();
                 $result = false;
             }else{
-                $insert_token = $this->insert_access_token($user_id,$created_at);
-                if($insert_token['status'] == true){
-                    $this->db->trans_commit();
-                    $result = $insert_token;
-                }else{
-                    $result = false;
-                }
+                // $insert_token = $this->insert_access_token($user_id,$created_at);
+                // if($insert_token['status'] == true){
+                //     $this->db->trans_commit();
+                //     $result = $insert_token;
+                // }else{
+                //     $result = false;
+                // }
+                
+                $this->db->trans_commit();
+                $result['id'] = $user_id;
+                $result['status'] = true;
             }
         }else{
             $result = false;
@@ -39,7 +43,8 @@ class User_model extends CI_Model{
 
     public function register($data = array()){
         $username = $data['username'];
-        $password = $this->encryption->encrypt($data['password']);
+        // $password = $this->encryption->encrypt($data['password']);
+        $password = $data['password'];
         $firstname = $data['firstname'];
         $lastname = $data['lastname'];
         $user_type = $data['user_type'];
@@ -107,11 +112,46 @@ class User_model extends CI_Model{
         return $result;
     }
 
-    public function get_active_user($data=array()){
-        $access_token = $data['access_token'];
-        $str = "select user.*,token.access_token from users as user left join users_access_token as token on token.user_id = user.id where token.access_token = '{$access_token}'";
+    public function get_active_user($user_id){
+        // $access_token = $data['access_token'];
+        // $str = "select user.*,token.access_token from users as user left join users_access_token as token on token.user_id = user.id where token.access_token = '{$access_token}'";
+        $str = "select * from users where id = '{$user_id}'";
         $query = $this->db->query($str)->row_array();
         return $query;
+    }
+
+    public function delete_user($data = array()){
+        $user_id = $data['id'];
+        $this->db->delete('users', array('id' => $user_id));
+        return $this->db->affected_rows();
+    }
+
+    public function update_user($data=array()){
+        $id = $data['id'];
+        $username = $data['username'];
+        $password = $data['password'];
+        $firstname = $data['firstname'];
+        $lastname = $data['lastname'];
+        $user_type = $data['user_type'];
+
+        $update = array(
+            'username' => $username,
+            'password' => $password,
+            'firstname' => $firstname,
+            'lastname' => $lastname,
+            'user_type' => $user_type
+        );
+        $this->db->trans_begin();
+        $this->db->update('users', $update, array('id' => $id));
+        
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = false;
+        }else{
+            $this->db->trans_commit();
+            $result = true;
+        }
+        return $result;
     }
 
 }

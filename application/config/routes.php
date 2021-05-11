@@ -53,8 +53,11 @@ $route['default_controller'] = 'welcome';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
-$route['register'] = '/api/users/register';
+$route['registerUser'] = '/api/users/registerUser';
+$route['testpost'] = '/api/users/testpost';
 $route['login'] = '/api/users/login';
 $route['test'] = '/api/users/test';
+$route['deleteUser'] = 'api/users/deleteUser';
+$route['updateUser'] = 'api/users/updateUser';
 
 $route['user/getUser'] = '/api/users/getUser';

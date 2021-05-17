@@ -15,4 +15,13 @@ class Mylib extends CI_Model{
     public function permitted_chars(){
         return '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     }
+
+    public function getDiscount(){
+        return $this->db->get('discount');
+    }
+
+    public function getPhysicians(){
+        $str = "select id as value,concat(lastname,', ',firstname,' ',middlename)as text,gender from physicians order by lastname";
+        return $this->db->query($str);
+    }
 }

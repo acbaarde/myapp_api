@@ -18,7 +18,15 @@ class Patient extends REST_Controller {
         echo json_encode($this->db->get()->result());
     }
     public function getPatient_post(){
-        echo json_encode($this->db->get_where('patients', array('id' => $this->input->post('id')))->row_array());
+        $patient = $this->db->get_where('patients', array('id' => $this->input->post('id')));
+        $discount = $this->db->get('discount');
+        $physicians = $this->mylib->getPhysicians();
+        $result = array(
+            'patient' => $patient->row_array(),
+            'discount' => $discount->result_array(),
+            'physicians' => $physicians->result_array()
+        );
+        echo json_encode($result);
     }
 
     public function insertPatient_post(){

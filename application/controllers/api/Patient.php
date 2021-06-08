@@ -19,7 +19,7 @@ class Patient extends REST_Controller {
     }
     public function getPatient_post(){
         $patient = $this->db->get_where('patients', array('id' => $this->input->post('id')));
-        $discount = $this->db->get('discount');
+        $discount = $this->db->get('dm_discount');
         $physicians = $this->mylib->getPhysicians();
         $result = array(
             'patient' => $patient->row_array(),

@@ -12,11 +12,13 @@ class Appointment_model extends CI_Model{
         $submod_id = $data['submod_id'];
         $total_fee = doubleval($data['total_fee']);
         $total_cash = doubleval($data['total_cash']);
+        $total_balance = doubleval($data['total_balance']);
+        $user_id = $data['user_id'];
         //F = FOR PRINT , P = PENDING
-        if($total_fee == 0){
-            $status = 'P';
+        if($total_balance == 0 && $discount_percent == 100){
+            $status = 'F';
         }else{
-            if($total_fee == $total_cash){
+            if($total_balance > 0 && $total_balance == $total_cash){
                 $status = 'F';
             }else{
                 $status = 'P';
@@ -33,10 +35,12 @@ class Appointment_model extends CI_Model{
             'discount' => $discount_percent,
             'status' => $status,
             'payment' => $total_cash,
+            'balance' => $total_balance,
             'totalamount' => $total_fee,
             'submod_id' => $submod_id,
             'created_at' => $created_at,
-            'payment_date' => $payment_date
+            'payment_date' => $payment_date,
+            'created_by' => $user_id
         );
         //update patient status along with appointment status
         $str = "update patients set `status` = '{$status}', `last_checkup` = '{$timestamp}' where id = '{$patient_id}'";
@@ -114,6 +118,7 @@ class Appointment_model extends CI_Model{
         bb.discount_rmks,
         bb.totalamount,
         bb.payment,
+        bb.balance,
         bb.physician_id,
         bb.submod_id
         from patients as aa
@@ -144,12 +149,14 @@ class Appointment_model extends CI_Model{
         $submod_id = $data['submod_id'];
         $total_fee = doubleval($data['total_fee']);
         $total_cash = doubleval($data['total_cash']);
+        $total_balance = doubleval($data['total_balance']);
         $cdate = date($data['cdate']);
+        $user_id = $data['user_id'];
         //F = FOR PRINT , P = PENDING
-        if($total_fee == 0){
-            $status = 'P';
+        if($total_balance == 0){
+            $status = $discount_percent == 100 ? 'F' : 'P';
         }else{
-            if($total_fee == $total_cash){
+            if($total_cash >= $total_balance){
                 $status = 'F';
             }else{
                 $status = 'P';
@@ -163,9 +170,12 @@ class Appointment_model extends CI_Model{
             'discount' => $discount_percent,
             'status' => $status,
             'payment' => $total_cash,
+            'balance' => $total_balance,
             'totalamount' => $total_fee,
             'payment_date' => $payment_date,
-            'submod_id' => $submod_id
+            'submod_id' => $submod_id,
+            'updated_by' => $user_id,
+            'updated_at' => $timestamp
         );
         $str = "update patients set `status` = '{$status}' where id = '{$patient_id}'";
         $this->db->trans_begin();
@@ -197,5 +207,53 @@ class Appointment_model extends CI_Model{
             }
         }
         return $submod;
+    }
+
+    public function getappointment_forreleased(){
+        $str = "select
+        CONCAT(bb.lastname,', ',bb.firstname,' ',bb.middlename)AS 'fullname',
+        bb.age,
+        IF(bb.gender = 'm','Male',IF(bb.gender = 'f','Female',''))AS 'gender',
+        CONCAT(IF(cc.gender = 'f','Dra. ','Dr. '),cc.lastname,', ',cc.firstname,' ',cc.middlename)AS 'physician',
+        aa.*
+        FROM appointments AS aa
+        LEFT JOIN patients AS bb ON bb.id = aa.patient_id
+        LEFT JOIN physicians AS cc ON cc.id = aa.physician_id
+        WHERE aa.status = 'F' and aa.posted = 'Y' order by aa.created_at desc";
+        return $this->db->query($str);
+    }
+
+    public function postappointment($data=array()){
+        $appointment_id = $data['appointment_id'];
+        $timestamp = date('Y-m-d H:i:s');
+        $user_id = $data['user_id'];
+
+        $this->db->trans_begin();
+
+        $appointment = $this->db->get_where('appointments', "id = {$appointment_id}")->row_array();
+        $approved = $appointment['discount_type'] == 'others' ? 'P' : 'Y';
+
+        $fields = array(
+            'posted' => 'Y',
+            'approved' => $approved,
+            'posted_by' => $user_id,
+            'posted_date' => $timestamp
+        );
+        $filters = "`id` = {$appointment_id} and `status` = 'F'";
+        $this->db->update('appointments', $fields, $filters);
+
+        $fields = array('status' => 'C', 'last_checkup' => '0000-00-00 00:00:00');
+        $filters = "`id` = ". $appointment['patient_id'] ." and `status` = 'F'";
+        $this->db->update('patients', $fields, $filters);
+
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = false;
+        }else{
+            $this->db->trans_commit();
+            $result = true;
+        }
+
+        return $result;
     }
 }

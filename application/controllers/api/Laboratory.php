@@ -11,7 +11,7 @@ class Laboratory extends REST_Controller {
     }
 
     public function loadLabmodule_post(){
-        $result = $this->laboratorymodel->loadlabmodule();
+        $result = $this->laboratorymodel->loadlabmodule($this->input->post());
         $patientlabtest = $this->laboratorymodel->load_patientlabtest($this->input->post('appointment_id'))->result_array();
         if($result->num_rows() > 0){
             $rows = $result->result_array();

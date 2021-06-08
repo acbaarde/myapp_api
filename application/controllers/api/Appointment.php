@@ -98,6 +98,38 @@ class Appointment extends REST_Controller {
         echo json_encode($result);
     }
 
+    public function getAppointment_forreleased_get(){
+        $result = $this->appointmentmodel->getappointment_forreleased()->result_array();
+        if($this->db->affected_rows($result) > 0){
+            $res = array(
+                'result' => $result,
+                'status' => true 
+            );
+        }else{
+            $res = array(
+                'result' => [],
+                'status' => false 
+            );
+        }
+        echo json_encode($res);
+    }
+
+    public function postAppointment_post(){
+        $result = $this->appointmentmodel->postappointment($this->input->post());
+        if($result == true){
+            $res = array(
+                'message' => 'Update Successful!',
+                'status' => true 
+            );
+        }else{
+            $res = array(
+                'message' => 'Update Failed!',
+                'status' => false 
+            );
+        }
+        echo json_encode($res);
+    }
+
     public function insertmod_post(){
         $mod_res = json_decode($this->input->post('lab_test'));
         echo json_encode(count($mod_res));

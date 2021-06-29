@@ -32,13 +32,13 @@ class Timekeeping_model extends CI_Model{
     public function employee_dtr($id){
         $this->db->trans_begin();
         $year = $this->mylib->get_active_yr();
-        $payperiod = $this->mylib->get_active_pp();
+        $payperiod = $this->mylib->get_active_pp()->row_array();
         $employee = $this->db->get_where('employees', array('id' => $id))->row_array();
         $ws = $this->db->get_where('dm_work_schedule', array('ws_code' => $employee['ws_code']))->result_array();
 
         $this->db->query("drop temporary table if exists dtr");
         $temp_table = "create temporary table `dtr`
-        select employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,actual_amin,actual_amout,actual_pmin,actual_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end
+        select employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,actual_amin,actual_amout,actual_pmin,actual_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min
         from dtr_{$year} where employee_id = '".$employee['id']."' and `date` >= date('".$payperiod['cfrom']."') and `date` <= date('".$payperiod['cto']."')";
         $this->db->query($temp_table);
         $temp_table = $this->db->get('dtr')->result_array();
@@ -48,7 +48,13 @@ class Timekeeping_model extends CI_Model{
         for($i = 0; $i <= $interval->days; $i++){
             $nextdate = date_format(date_add(date_create($payperiod['cfrom']), date_interval_create_from_date_string("{$i} days")), 'Y-m-d');
             $day = date_format(date_create($nextdate), "D");
-            // $type = '';
+            if($employee['ordinary_restday'] == $day){
+                $type = "D";
+            }elseif($employee['original_restday'] == $day){
+                $type = "D";
+            }else{
+                $type = "R";
+            }
             foreach($ws as $rw){
                 if($rw['ws_day'] == $day){
                     $sched_amin = $nextdate . " " . $rw['ws_amin'];
@@ -68,6 +74,12 @@ class Timekeeping_model extends CI_Model{
                     $ot_end = $temp_row['ot_end'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ot_end'];
                     $ut_start = $temp_row['ut_start'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ut_start'];
                     $ut_end = $temp_row['ut_end'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ut_end'];
+                    $am_lates = $temp_row['am_lates'];
+                    $pm_lates = $temp_row['pm_lates'];
+                    $am_min = $temp_row['am_min'];
+                    $pm_min = $temp_row['pm_min'];
+                    $ot_min = $temp_row['ot_min'];
+                    $ut_min = $temp_row['ut_min'];
                 }
             }
 
@@ -75,6 +87,7 @@ class Timekeeping_model extends CI_Model{
                 $this->db->escape($employee['id']) .",". 
                 $this->db->escape($nextdate) .",". 
                 $this->db->escape($day) .",". 
+                $this->db->escape($type) .",". 
                 $this->db->escape($employee['ws_code']) .",". 
                 $this->db->escape($sched_amin) .",". 
                 $this->db->escape($sched_amout) .",". 
@@ -87,8 +100,13 @@ class Timekeeping_model extends CI_Model{
                 $this->db->escape(!empty($ot_start) ? $ot_start : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($ot_end) ? $ot_end : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($ut_start) ? $ut_start : '0000-00-00 00:00:00') .",". 
-                $this->db->escape(!empty($ut_end) ? $ut_end : '0000-00-00 00:00:00')
-                . ")"
+                $this->db->escape(!empty($ut_end) ? $ut_end : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($am_lates) ? $am_lates : '0.00') .",". 
+                $this->db->escape(!empty($pm_lates) ? $pm_lates : '0.00') .",". 
+                $this->db->escape(!empty($am_min) ? $am_min : '0.00') .",". 
+                $this->db->escape(!empty($pm_min) ? $pm_min : '0.00') .",". 
+                $this->db->escape(!empty($ot_min) ? $ot_min : '0.00') .",". 
+                $this->db->escape(!empty($ut_min) ? $ut_min : '0.00') . ")"
             );
         }
         //delete dtr records
@@ -96,15 +114,16 @@ class Timekeeping_model extends CI_Model{
         $this->db->query($str);
 
         //insert dtr records
-        $dtr_insert = "insert into dtr_{$year} (employee_id,date,day,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end)VALUES";
+        $dtr_insert = "insert into dtr_{$year} (employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min)VALUES";
         $dtr_insert .= implode($dtr,",");
         $this->db->query($dtr_insert);
 
         $dtr_select = "select
         id,
         employee_id,
-        date,
-        day,
+        `date`,
+        `day`,
+        `type`,
         ws_code,
         time(sched_amin)as sched_amin,
         time(sched_amout) as sched_amout,
@@ -160,4 +179,390 @@ class Timekeeping_model extends CI_Model{
         return $result;
     }
 
+    public function processmanhour(){
+        $year = $this->mylib->get_active_yr();
+        $payperiod = $this->mylib->get_active_pp()->row_array();
+        $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
+        $employees = $this->db->get_where('employees', "employee_status_id != 'S'")->result_array();
+        $grace_period = $this->db->get('dm_work_shift')->result_array();
+        $empno = [];
+        foreach($employees as $emp){
+            array_push($empno, $emp['id']);
+        }
+        $empno = implode(",", $empno);
+
+        $pansamantala = "pansamantala";
+        $temp_dtr = "{$pansamantala}.dtr_".$this->mylib->random_string(10);
+        $temp_mhr = "{$pansamantala}.mhr_".$this->mylib->random_string(10);
+        //check if manhour posting already done
+        if($posting_logs->num_rows() == 0){
+            $str = "create table if not exists {$temp_dtr}
+            select * from dtr_{$year} where `date` >= date('".$payperiod['cfrom']."') and `date` <= date('".$payperiod['cto']."') and employee_id in ({$empno})";
+            $this->db->query($str);
+
+            $str = "create table if not exists {$temp_mhr} like mhr_{$year}";
+            $this->db->query($str);
+
+            $str = "update {$temp_dtr}
+                SET
+                    am_lates = (case
+                    when encoded_amin > sched_amin
+                        then (hour(timediff(encoded_amin, sched_amin)) * 60) + (minute(timediff(encoded_amin, sched_amin)))
+                    when encoded_amin <= sched_amin
+                        then 0
+                    WHEN (encoded_amin = '0000-00-00 00:00:00'
+                    OR encoded_amout = '0000-00-00 00:00:00')
+                        THEN 0
+                    else am_lates
+                    end
+                    ),
+                    pm_lates = (case
+                    when encoded_pmin > sched_pmin
+                        then (hour(timediff(encoded_pmin, sched_pmin)) * 60) + (minute(timediff(encoded_pmin, sched_pmin)))
+                    when encoded_pmin <= sched_pmin
+                        then 0
+                    WHEN (encoded_pmin = '0000-00-00 00:00:00'
+                    OR encoded_pmout = '0000-00-00 00:00:00')
+                        THEN 0
+                    else pm_lates
+                    end
+                    ),
+                    am_min = (case
+                    when encoded_amin >= sched_amin
+                    and encoded_amout >= sched_amout
+                        then (hour(timediff(encoded_amin, sched_amout)) * 60) + (minute(timediff(encoded_amin, sched_amout)))
+                       
+                    when encoded_amin <= sched_amin
+                    and encoded_amout >= sched_amout
+                        then (hour(timediff(sched_amin, sched_amout)) * 60) + (minute(timediff(sched_amin, sched_amout)))
+
+                    when encoded_amin != '0000-00-00 00:00:00'
+                    and encoded_amout < sched_amout
+                        then 0
+                    WHEN (encoded_amin = '0000-00-00 00:00:00'
+                    OR encoded_amout = '0000-00-00 00:00:00')
+                        THEN 0
+                    else am_min
+                    end
+                    ),
+                    pm_min = (case
+                    when encoded_pmin <= sched_pmin
+                    and encoded_pmout >= sched_pmout
+                        then (hour(timediff(sched_pmout, sched_pmin)) * 60) + (minute(timediff(sched_pmout, sched_pmin)))
+                        
+                    when encoded_pmin > sched_pmin
+                    and encoded_pmout >= sched_pmout
+                        then (hour(timediff(sched_pmout, encoded_pmin)) * 60) + (minute(timediff(sched_pmout, encoded_pmin)))
+                        
+                    when encoded_pmin != '0000-00-00 00:00:00'
+                    and encoded_pmout < sched_pmout
+                        then 0
+                    
+                    when (encoded_pmin = '0000-00-00 00:00:00'
+                    OR encoded_pmout = '0000-00-00 00:00:00')
+                        then 0
+                    else pm_min
+                    end
+                    ),
+                    ot_min = (case
+                    when encoded_pmout >= sched_pmout
+                    and ot_start >= sched_pmout
+                    and ot_end <= encoded_pmout
+                        then (hour(timediff(ot_end, ot_start)) * 60) + (minute(timediff(ot_end, ot_start))) 
+                    when (ot_start = '0000-00-00 00:00:00'
+                    OR ot_end = '0000-00-00 00:00:00')
+                        then 0
+                    else ot_min
+                    end
+                    )
+                where `date` >= date('".$payperiod['cfrom']."')
+                    and `date` <= date('".$payperiod['cto']."')";
+            $this->db->query($str);
+
+            $res = $this->db->get($temp_dtr)->result_array();
+            foreach($res as $rw){
+                foreach($grace_period as $graceperiod_row){
+                    if($graceperiod_row['ws_code'] == $rw['ws_code']){
+                        $gp_mins = $graceperiod_row['grace_period'];
+                        $am_lates = $rw['am_lates'] <= $gp_mins ? 0 : $rw['am_lates'] - $gp_mins;
+                        $am_min = $rw['am_lates'] <= $gp_mins ? $rw['am_min'] + $rw['am_lates'] : $rw['am_min'] + $gp_mins;
+                        $update = "update {$temp_dtr} set am_lates = {$am_lates}, am_min = {$am_min} where id = '".$rw['id']."' ";
+                        $this->db->query($update);
+                    }
+                }
+            }
+
+            $str = "update dtr_{$year} aa, {$temp_dtr} bb set
+                    aa.am_lates = bb.am_lates,
+                    aa.pm_lates = bb.pm_lates,
+                    aa.am_min = bb.am_min,
+                    aa.pm_min = bb.pm_min,
+                    aa.ot_min = bb.ot_min,
+                    aa.ut_min = bb.ut_min
+                    where aa.id = bb.id";
+            $this->db->query($str);
+
+            $str = "insert into {$temp_mhr} (employee_id,payperiod,total_tardy,regular,regular_ot,regular_ut)
+            (select 
+            employee_id,
+            '".$payperiod['pperiod']."' as pperiod,
+            round(((SUM(am_lates) + SUM(pm_lates))/60),2) AS total_tardy,
+            ROUND(((SUM(am_min) + SUM(pm_min))/60),2) AS regular,
+            ROUND((SUM(ot_min))/60,2) AS regular_ot,
+            ROUND((SUM(ut_min))/60,2) AS regular_ut
+            FROM {$temp_dtr} 
+            WHERE `date` >= date('".$payperiod['cfrom']."')
+            AND `date` <= date('".$payperiod['cto']."')
+            AND `type` = 'R'
+            GROUP BY employee_id)";
+            $this->db->query($str);
+
+            $str = "delete from mhr_{$year} where payperiod = date('".$payperiod['pperiod']."')";
+            $this->db->query($str);
+            
+            $str = "delete from {$temp_mhr} where payperiod = date('".$payperiod['pperiod']."') and `regular` = 0";
+            $this->db->query($str);
+
+            $str = "insert into mhr_{$year}(employee_id,payperiod,total_tardy,regular,regular_ot,regular_ut,restday,restday_ot,restday_ut)
+            (select employee_id,payperiod,total_tardy,regular,regular_ot,regular_ut,restday,restday_ot,restday_ut
+            from {$temp_mhr} where payperiod = date('".$payperiod['pperiod']."') )";
+            $this->db->query($str);
+
+            //process salary adjustments
+            $str = "select * from mhr_{$year} where payperiod = date('".$payperiod['pperiod']."')";
+            $result = $this->db->query($str)->result_array();
+            foreach($result as $rw){
+                $str = "select * from salary_adjustments where employee_id = '".$rw['employee_id']."' and payperiod = '".$rw['payperiod']."' ";
+                $adjstmnts = $this->db->query($str);
+
+                foreach($employees as $emp_rw){
+                    $salary = 0;
+                    if($emp_rw['id'] == $rw['employee_id']){
+                        $salary = $emp_rw['salary'];
+                        break;
+                    }
+                }
+
+                $gross = (floatval($salary) / 8) * floatval($rw['regular']);
+                $fields = array(
+                    'employee_id' => $rw['employee_id'],
+                    'payperiod' => $rw['payperiod'],
+                    'salary' => $salary,
+                    'gross' => round($gross,2)
+                );
+
+                if($adjstmnts->num_rows() > 0){
+                    $adjstmnts = $adjstmnts->row_array();
+                    $fields['net'] = round($gross - floatval($adjstmnts['adjustments']),2);
+                    $this->db->update('salary_adjustments', $fields, array('id' => $adjstmnts['id']));
+                }else{
+                    $fields['net'] = round($gross,2);
+                    $this->db->insert('salary_adjustments', $fields);
+                }
+            }
+            //end salary adjustments
+
+            $result = array(
+                'status' => true,
+                'message' => 'Process Manhour Success!'
+            );
+        }else{
+            $result = array(
+                'status' => false,
+                'message' => 'Manhour Posting Already Done!!!'
+            );
+        }
+        
+        $sstr = "drop table if exists {$temp_dtr}";
+        $this->db->query($sstr);
+
+        $sstr = "drop table if exists {$temp_mhr}";
+        $this->db->query($sstr);
+
+        return $result;
+    }
+
+    public function postmanhour($data=array()){
+        $user_id = $data['user_id'];
+        $year = $this->mylib->get_active_yr();
+        $payperiod = $this->mylib->get_active_pp()->row_array();
+        $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
+        
+        if($posting_logs->num_rows() == 0){
+            $data = array(
+                'module' => 'postmanhour',
+                'payperiod' => $payperiod['pperiod'],
+                'user_id' => $user_id,
+                'log_date' => date('Y-m-d H:i:s')
+            );
+            $this->db->insert('posting_logs', $data);
+            $result = array(
+                'status' => true,
+                'message' => 'Posting Manhour Success!!!'
+            );
+        }else{
+            $result = array(
+                'status' => false,
+                'message' => 'Manhour Posting Already Done!!! Proceed on Payroll Computation...'
+            );
+        }
+
+        return $result;
+    }
+
+    public function salary_adjustments($id){
+        $payperiod = $this->mylib->get_active_pp()->row_array();
+        $year = $this->mylib->get_active_yr();
+        $str = "select aa.*,bb.regular FROM salary_adjustments aa
+        LEFT JOIN mhr_{$year} bb ON bb.employee_id = aa.employee_id AND bb.payperiod = aa.payperiod
+        WHERE aa.employee_id = '{$id}' AND DATE(aa.payperiod) = DATE('".$payperiod['pperiod']."')";
+        return $this->db->query($str);
+    }
+    public function salary_adjustments_breakdown($id){
+        $str = "select * from salary_adjustments_breakdown where adjustment_id = '{$id}'";
+        return $this->db->query($str);
+    }
+
+    public function insertsalaryadjustment($data=array()){
+        $this->db->trans_start();
+        $post = $data;
+        $payperiod = $this->mylib->get_active_pp()->row_array();
+        $timestamp = date('Y-m-d H:i:s');
+
+        $insert['table_name'] = 'salary_adjustments_breakdown';
+        $insert['fields'] = array(
+            'adjustment_id' => $post['adjustment_id'],
+            'description' => strtoupper($post['description']),
+            'amount' => $post['amount'],
+            'created_by' => $post['user_id'],
+            'created_at' => $timestamp
+        );
+        $insert = $this->builder->create_insert($insert);
+
+        $select['table_name'] = 'salary_adjustments';
+        $select['filters'] = array('id' => $post['adjustment_id']);
+        $select = $this->builder->create_select($select)['result']->row_array();
+        
+        $net = floatval($select['net']) - floatval($post['amount']);
+        $adjustments = floatval($select['adjustments']) + floatval($post['amount']);
+
+        $update['table_name'] = 'salary_adjustments';
+        $update['fields'] = array(
+            'net' => round($net,2),
+            'adjustments' => round($adjustments,2)
+        );
+        $update['filters'] = array('id' => $post['adjustment_id']);
+        $update = $this->builder->create_update($update);
+
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false,
+                'message' => 'Insert Adjustment Failed!'
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true,
+                'message' => 'Insert Adjustment Success!'
+            );
+        }
+        return $result;
+    }
+    public function updatesalaryadjustment($data=array()){
+        $this->db->trans_start();
+        $post = $data;
+        $payperiod = $this->mylib->get_active_pp()->row_array();
+        $timestamp = date('Y-m-d H:i:s');
+
+        $select_adj['table_name'] = 'salary_adjustments';
+        $select_adj['filters'] = array('id' => $post['adjustment_id']);
+        $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
+
+        $select_brkdwn['table_name'] = 'salary_adjustments_breakdown';
+        $select_brkdwn['filters'] = array('id' => $post['id']);
+        $select_brkdwn = $this->builder->create_select($select_brkdwn)['result']->row_array();
+        
+        $update['table_name'] = 'salary_adjustments_breakdown';
+        $update['fields'] = array(
+            'adjustment_id' => $post['adjustment_id'],
+            'description' => strtoupper($post['description']),
+            'amount' => $post['amount'],
+            'updated_by' => $post['user_id'],
+            'updated_at' => $timestamp
+        );
+        $update['filters'] = array('id' => $post['id']);
+        $update = $this->builder->create_update($update);
+        //old value
+        $net = floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
+        $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
+        //updated value
+        $net = floatval($net) - floatval($post['amount']);
+        $adjustments = floatval($adjustments) + floatval($post['amount']);
+
+        $update['table_name'] = 'salary_adjustments';
+        $update['fields'] = array(
+            'net' => round($net,2),
+            'adjustments' => round($adjustments,2)
+        );
+        $update['filters'] = array('id' => $post['adjustment_id']);
+        $update = $this->builder->create_update($update);
+
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false,
+                'message' => 'Update Adjustment Failed!'
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true,
+                'message' => 'Update Adjustment Success!'
+            );
+        }
+        return $result;
+    }
+
+    public function deletesalaryadjustment($data=array()){
+        $this->db->trans_start();
+        $post = $this->input->post();
+
+        $select_adj['table_name'] = 'salary_adjustments';
+        $select_adj['filters'] = array('id' => $post['adjustment_id']);
+        $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
+
+        $select_brkdwn['table_name'] = 'salary_adjustments_breakdown';
+        $select_brkdwn['filters'] = array('id' => $post['id']);
+        $select_brkdwn = $this->builder->create_select($select_brkdwn)['result']->row_array();
+
+        //old value
+        $net = floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
+        $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
+
+        $update['table_name'] = 'salary_adjustments';
+        $update['fields'] = array(
+            'net' => round($net,2),
+            'adjustments' => round($adjustments,2)
+        );
+        $update['filters'] = array('id' => $post['adjustment_id']);
+        $update = $this->builder->create_update($update);
+
+        $this->db->delete('salary_adjustments_breakdown', array('id' => $post['id']));
+
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false,
+                'message' => 'Delete Adjustment Failed!'
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true,
+                'message' => 'Delete Adjustment Success!'
+            );
+        }
+        return $result;
+    }
 }

@@ -12,12 +12,12 @@ class Timekeeping extends REST_Controller {
     }
 
     public function getEmployees_get(){
-        $affected_rows = $this->timekeepingmodel->getemployees();
-        if($this->db->affected_rows($affected_rows) > 0){
+        $employees = $this->timekeepingmodel->getemployees();
+        if($employees->num_rows() > 0){
             $result = array(
                 'status' => true,
                 'message' => 'Success!',
-                'result' => $affected_rows->result_array()
+                'result' => $employees->result_array()
             );
         }else{
             $result = array(
@@ -30,17 +30,23 @@ class Timekeeping extends REST_Controller {
     }
 
     public function getEmployee_post(){
-        $affected_rows = $this->mylib->get_active_pp();
-        if($this->db->affected_rows($affected_rows) > 0){
-            $employee = $this->timekeepingmodel->getemployee($this->input->post('id'))->row_array();
-            $dtr = $this->timekeepingmodel->employee_dtr($this->input->post('id'));
+        $payperiod = $this->mylib->get_active_pp();
+        $post = $this->input->post();
+        if($payperiod->num_rows() > 0){
+            $employee = $this->timekeepingmodel->getemployee($post['id'])->row_array();
+            $dtr = $this->timekeepingmodel->employee_dtr($post['id']);
+            $salary_adjustments = $this->timekeepingmodel->salary_adjustments($post['id']);
+            $salary_adj = $salary_adjustments->num_rows() > 0 ? $salary_adjustments->row_array() : [];
+            $salary_adjustments_breakdown = $this->timekeepingmodel->salary_adjustments_breakdown(isset($salary_adj['id']) ? $salary_adj['id'] : 0);
             $result = array(
                 'status' => true,
                 'message' => 'Success!',
                 'result' => [
                     'employee' => $employee,
-                    'payperiod' => $affected_rows,
-                    'dtr' => $this->db->query($dtr['query'])->result_array()
+                    'payperiod' => $payperiod->row_array(),
+                    'dtr' => $this->db->query($dtr['query'])->result_array(),
+                    'salary_adjustments' => $salary_adj,
+                    'salary_adjustments_breakdown' => $salary_adjustments_breakdown->num_rows() > 0 ? $salary_adjustments_breakdown->result_array() : []
                 ]
             );
         }else{
@@ -69,24 +75,20 @@ class Timekeeping extends REST_Controller {
         echo json_encode($result);
     }
 
-    // public function employeeDtr_post(){
-    //     $result = $this->timekeepingmodel->employee_dtr($this->input->post('id'));
-    //     if($result['status'] == true){
-    //         $result = array(
-    //             'status' => true,
-    //             'result' => [
-    //                 'dtr' => $this->db->query($result['query'])->result_array()
-    //             ]
-    //         );
-    //     }else{
-    //         $result = array(
-    //             'status' => false,
-    //             'result' => [
-    //                 'dtr' => []
-    //             ]
-    //         );
-    //     }
+    public function processmanhour_post(){
+        echo json_encode($this->timekeepingmodel->processmanhour());
+    }
+    public function postmanhour_post(){
+        echo json_encode($this->timekeepingmodel->postmanhour($this->input->post()));
+    }
 
-    //     echo json_encode($result);
-    // }
+    public function insertSalaryAdjustment_post(){
+        echo json_encode($this->timekeepingmodel->insertsalaryadjustment($this->input->post()));
+    }
+    public function updateSalaryAdjustment_post(){
+        echo json_encode($this->timekeepingmodel->updatesalaryadjustment($this->input->post()));
+    }
+    public function deleteSalaryAdjustment_post(){
+        echo json_encode($this->timekeepingmodel->deletesalaryadjustment($this->input->post()));
+    }
 }

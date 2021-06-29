@@ -24,7 +24,11 @@ class Laboratory_model extends CI_Model{
     }
 
     public function loadsubsubmodule($id){
-        return $this->db->get_where('laboratory_subsubmodule', array('mod_id' => $id));
+        $str = "select aa.*,bb.abbr from laboratory_subsubmodule aa 
+        left join laboratory_submodule bb on bb.id = aa.submod_id
+        where aa.mod_id = {$id}";
+        return $this->db->query($str);
+        // return $this->db->get_where('laboratory_subsubmodule', array('mod_id' => $id));
     }
 
     public function load_patientlabtest($id){

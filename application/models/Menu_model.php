@@ -22,6 +22,34 @@ class Menu_model extends CI_Model{
         return $query;
     }
 
+
+    public function saveuseraccess($data=array()){
+        $post = $data;
+        $timestamp = date("Y-m-d H:i:s");
+        $this->db->trans_begin();
+        $str = "delete from users_mod_access where user_id = ".$post['id'];
+        $this->db->query($str);
+        $mod_id = explode(",", $post['mod_id']);
+        foreach($mod_id as $rw){
+            $useraccess['table_name'] = "users_mod_access";
+            $useraccess['fields'] = array(
+                'user_id' => $post['id'],
+                'mod_id' => $rw,
+                'created_by' => $post['user_id'],
+                'created_at' => $timestamp
+            );
+            $useraccess = $this->builder->create_insert($useraccess);
+        }
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = false;
+        }else{
+            $this->db->trans_commit();
+            $result = true;
+        }
+
+        return $result;
+    }
     
 
 }

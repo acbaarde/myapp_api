@@ -9,12 +9,10 @@ class Patient extends REST_Controller {
        $this->load->model('Patient_model', 'patientmodel');
        $this->load->model('Mylib', 'mylib');
     }
-
     public function getPatients_get(){
         $this->db->select('*');
         $this->db->from('patients');
-        $this->db->order_by('id', 'desc');
-
+        $this->db->order_by('last_checkup,created_at', 'desc');
         echo json_encode($this->db->get()->result());
     }
     public function getPatient_post(){
@@ -28,7 +26,6 @@ class Patient extends REST_Controller {
         );
         echo json_encode($result);
     }
-
     public function insertPatient_post(){
         $result = $this->patientmodel->insertpatient($this->input->post());
         if($result == true){
@@ -44,7 +41,6 @@ class Patient extends REST_Controller {
         }
         echo json_encode($result);
     }
-
     public function updatePatient_post(){
         $result = $this->patientmodel->updatepatient($this->input->post());
         if($result == true){
@@ -60,6 +56,4 @@ class Patient extends REST_Controller {
         }
         echo json_encode($result);
     }
-
-    
 }

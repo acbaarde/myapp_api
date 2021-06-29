@@ -41,15 +41,16 @@ class Appointment extends REST_Controller {
     }
 
     public function getAppointment_post(){
-        $affectedrows = $this->appointmentmodel->getappointment($this->input->post())->row_array();
-        if($this->db->affected_rows($affectedrows) > 0){
+        $patients = $this->appointmentmodel->getappointment($this->input->post());
+        if($patients->num_rows() > 0){
+            $patients = $patients->row_array();
             $lab_test = $this->appointmentmodel->getpatientlabtest($this->input->post());
-            $discount = $this->db->get('discount');
+            $discount = $this->db->get('dm_discount');
             $physicians = $this->mylib->getPhysicians();
-            $submod = $this->appointmentmodel->chipselected($affectedrows['submod_id']);
+            $submod = $this->appointmentmodel->chipselected($patients['submod_id']);
             $result = array(
                 'status' => true,
-                'patient' => $affectedrows,
+                'patient' => $patients,
                 'lab_test' => $lab_test->result_array(),
                 'discount' => $discount->result_array(),
                 'physicians' => $physicians->result_array(),

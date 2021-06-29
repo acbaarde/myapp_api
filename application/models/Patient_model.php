@@ -7,20 +7,24 @@ class Patient_model extends CI_Model{
         $lastname = $data['lastname'];
         $middlename = $data['middlename'];
         $age = $data['age'];
+        $agetype = $data['agetype'];
         $gender = $data['gender'];
         $contact = $data['contact'];
         $address = $data['address'];
+        $created_by = $data['user_id'];
         $created_at = date('Y-m-d H:i:s');
 
         $insert = array(
-            'firstname' => $firstname,
-            'lastname' => $lastname,
-            'middlename' => $middlename,
+            'firstname' => strtoupper($firstname),
+            'lastname' => strtoupper($lastname),
+            'middlename' => strtoupper($middlename),
             'age' => $age,
+            'agetype' => $agetype,
             'gender' => $gender,
             'contact' => $contact,
-            'address' => $address,
-            'created_at' => $created_at
+            'address' => strtoupper($address),
+            'created_at' => $created_at,
+            'created_by' => $created_by
         );
 
         $this->db->trans_begin();
@@ -43,20 +47,24 @@ class Patient_model extends CI_Model{
         $lastname = $data['lastname'];
         $middlename = $data['middlename'];
         $age = $data['age'];
+        $agetype = $data['agetype'];
         $gender = $data['gender'];
         $contact = $data['contact'];
         $address = $data['address'];
         $updated_at = date('Y-m-d H:i:s');
+        $updated_by = $data['user_id'];
 
         $update = array(
-            'firstname' => $firstname,
-            'lastname' => $lastname,
-            'middlename' => $middlename,
+            'firstname' => strtoupper($firstname),
+            'lastname' => strtoupper($lastname),
+            'middlename' => strtoupper($middlename),
             'age' => $age,
+            'agetype' => $agetype,
             'gender' => $gender,
             'contact' => $contact,
-            'address' => $address,
-            'updated_at' => $updated_at
+            'address' => strtoupper($address),
+            'updated_at' => $updated_at,
+            'updated_by' => $updated_by
         );
 
         $this->db->trans_begin();

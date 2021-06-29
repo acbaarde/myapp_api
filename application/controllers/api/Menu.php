@@ -8,6 +8,7 @@ class Menu extends REST_Controller {
        parent::__construct();
        $this->load->model('Menu_model', 'menumodel');
        $this->load->model('Mylib', 'mylib');
+       $this->load->library('Query_builder','','builder');
     }
 
     public function getAllModule_get(){
@@ -62,5 +63,51 @@ class Menu extends REST_Controller {
         }
         // echo json_encode($data == '' ? ['message' => 'no menu(s) found!'] : $data);
         echo json_encode(isset($data) ? $data : ['message' => 'No Menu(s) Found!']);
+    }
+
+    public function moduleMenu_get(){
+        $str = "select * from mod_menu order by mod_title";
+        echo json_encode($this->db->query($str)->result_array());
+    }
+
+    public function Menu_get(){
+        $menu = [];
+        $menu1 = $this->db->get_where('mod_menu', array('mod_lvl' => 1))->result_array();
+        foreach($menu1 as $k1=>$rw1){
+            array_push($menu, array(
+                'id' => $rw1['id'],
+                'name' => $rw1['mod_title'],
+                'children' => []
+            ));
+            $menu2 = $this->db->get_where('mod_menu', array('mod_parent' => $rw1['id']))->result_array();
+            foreach($menu2 as $k2=>$rw2){
+                array_push($menu[$k1]['children'], array(
+                    'id' => $rw2['id'],
+                    'name' => $rw2['mod_title'],
+                    'children' => []
+                ));
+                $menu3 = $this->db->get_where('mod_menu', array('mod_parent' => $rw2['id']))->result_array();
+                foreach($menu3 as $k3=>$rw3){
+                    array_push($menu[$k1]['children'][$k2]['children'], array(
+                        'id' => $rw3['id'],
+                        'name' => $rw3['mod_title'],
+                        'children' => []
+                    ));
+                }
+            }
+        }
+        echo json_encode($menu);
+    }
+    public function getUseraccess_post(){
+        $post = $this->input->post('id');
+        $result = $this->db->query("select mod_id from users_mod_access where user_id = '{$post}'")->result_array();
+        $access = [];
+        foreach($result as $rw){
+            array_push($access, $rw['mod_id']);
+        }
+        echo json_encode($access);
+    }
+    public function saveUseraccess_post(){    
+        echo json_encode($this->menumodel->saveuseraccess($this->input->post()));
     }
 }

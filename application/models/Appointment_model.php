@@ -196,8 +196,9 @@ class Appointment_model extends CI_Model{
         $submod_ids = explode("," , $data);
         $submod = [];
         foreach($submod_ids as $id){
-            $resmod = $this->db->get_where('laboratory_submodule', 'id='.$id)->row_array();
-            if($this->db->affected_rows($resmod) > 0){
+            $resmod = $this->db->get_where('laboratory_submodule', 'id='.$id);
+            if($resmod->num_rows() > 0){
+                $resmod = $resmod->row_array();
                 array_push($submod, array(
                     'value' => $resmod['id'],
                     'text' => $resmod['title'] . " (" . $resmod['amount'] . " Php)",
@@ -213,7 +214,10 @@ class Appointment_model extends CI_Model{
         $str = "select
         CONCAT(bb.lastname,', ',bb.firstname,' ',bb.middlename)AS 'fullname',
         bb.age,
-        IF(bb.gender = 'm','Male',IF(bb.gender = 'f','Female',''))AS 'gender',
+        bb.agetype,
+        bb.gender,
+        bb.address,
+        bb.contact,
         CONCAT(IF(cc.gender = 'f','Dra. ','Dr. '),cc.lastname,', ',cc.firstname,' ',cc.middlename)AS 'physician',
         aa.*
         FROM appointments AS aa
@@ -231,7 +235,7 @@ class Appointment_model extends CI_Model{
         $this->db->trans_begin();
 
         $appointment = $this->db->get_where('appointments', "id = {$appointment_id}")->row_array();
-        $approved = $appointment['discount_type'] == 'others' ? 'P' : 'Y';
+        $approved = $appointment['discount_type'] == 'others' ? '' : 'Y';
 
         $fields = array(
             'posted' => 'Y',

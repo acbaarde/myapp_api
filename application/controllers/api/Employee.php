@@ -24,9 +24,9 @@ class Employee extends REST_Controller {
         $employee['table_name'] = 'employees';
         $employee['fields'] = array(
             'id' => $new_emp_id,
-            'firstname' => $post['firstname'],
-            'lastname' => $post['lastname'],
-            'middlename' => $post['middlename'],
+            'firstname' => strtoupper($post['firstname']),
+            'lastname' => strtoupper($post['lastname']),
+            'middlename' => strtoupper($post['middlename']),
             'gender' => $post['gender'],
             'birthdate' => $post['birthdate'],
             'birthplace' => $post['birthplace'],
@@ -47,11 +47,14 @@ class Employee extends REST_Controller {
             'separation_date' => $post['separation_date'],
             'salary' => $post['salary'],
             'allowance' => $post['allowance'],
-            'employment_type_id' => $post['employment_type_id'],
+            // 'employment_type_id' => $post['employment_type_id'],
             'sss_no' => $post['sss_no'],
             'tin_no' => $post['tin_no'],
             'hdmf_no' => $post['hdmf_no'],
-            'philhealth_no' => $post['philhealth_no']
+            'philhealth_no' => $post['philhealth_no'],
+            'ordinary_restday' => $post['ordinary_restday'],
+            'original_restday' => $post['original_restday'],
+            'ws_code' => $post['ws_code']
         );
         $employee = $this->builder->create_insert($employee);
 
@@ -87,14 +90,14 @@ class Employee extends REST_Controller {
     }
     public function updateEmployee_post(){
         $post = $this->input->post();
-        $timestamp = date('Y-m-D H:i:s');
+        $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_begin();
 
         $employee['table_name'] = 'employees';
         $employee['fields'] = array(
-            'firstname' => $post['firstname'],
-            'lastname' => $post['lastname'],
-            'middlename' => $post['middlename'],
+            'firstname' => strtoupper($post['firstname']),
+            'lastname' => strtoupper($post['lastname']),
+            'middlename' => strtoupper($post['middlename']),
             'gender' => $post['gender'],
             'birthdate' => $post['birthdate'],
             'birthplace' => $post['birthplace'],
@@ -102,8 +105,8 @@ class Employee extends REST_Controller {
             'religion_id' => $post['religion_id'],
             'civil_status_id' => $post['civil_status_id'],
             'contact' => $post['contact'],
-            'permanent_address' => $post['permanent_address'],
-            'present_address' => $post['present_address'],
+            'permanent_address' => strtoupper($post['permanent_address']),
+            'present_address' => strtoupper($post['present_address']),
             'region_id' => $post['region_id'],
             'province_city_id' => $post['province_city_id'],
             'barangay_town_id' => $post['barangay_town_id'],
@@ -115,11 +118,14 @@ class Employee extends REST_Controller {
             'separation_date' => $post['separation_date'],
             'salary' => $post['salary'],
             'allowance' => $post['allowance'],
-            'employment_type_id' => $post['employment_type_id'],
+            // 'employment_type_id' => $post['employment_type_id'],
             'sss_no' => $post['sss_no'],
             'tin_no' => $post['tin_no'],
             'hdmf_no' => $post['hdmf_no'],
-            'philhealth_no' => $post['philhealth_no']
+            'philhealth_no' => $post['philhealth_no'],
+            'ordinary_restday' => $post['ordinary_restday'],
+            'original_restday' => $post['original_restday'],
+            'ws_code' => $post['ws_code']
         );
         $employee['filters'] = array('id' => $post['id']);
         $employee = $this->builder->create_update($employee);

@@ -8,6 +8,7 @@ class Laboratory extends REST_Controller {
        parent::__construct();
        $this->load->model('Laboratory_model', 'laboratorymodel');
        $this->load->model('Mylib', 'mylib');
+       $this->load->library('Query_builder','','builder');
     }
 
     public function loadLabmodule_post(){
@@ -44,6 +45,7 @@ class Laboratory extends REST_Controller {
                                 'submod_id' => $subsub_row['submod_id'],
                                 'title' => $subsub_row['title'],
                                 'result' => $labtest['result_value'],
+                                'submod_title' => $subsub_row['abbr']
                             ]);
                             $exist++;
                         }
@@ -54,6 +56,7 @@ class Laboratory extends REST_Controller {
                             'submod_id' => $subsub_row['submod_id'],
                             'title' => $subsub_row['title'],
                             'result' => '0.00',
+                            'submod_title' => $subsub_row['abbr']
                         ]);
                     }
                 }
@@ -71,6 +74,118 @@ class Laboratory extends REST_Controller {
             );
         }
 
+        echo json_encode($result);
+    }
+
+    public function saveModule_post(){
+        $post = $this->input->post();
+        $timestamp = date("Y-m-d H:i:s");
+
+        if($post['id'] == 'undefined'){
+            $insert['table_name'] = 'laboratory_module';
+            $insert['fields'] = array(
+                'title' => strtoupper($post['title']),
+                'created_by' => $post['user_id'],
+                'created_at' => $timestamp
+            );
+            $insert = $this->builder->create_insert($insert);
+            $result = array(
+                'status' => true,
+                'message' => 'Insert Success!'
+            );
+        }else{
+            $update['table_name'] = 'laboratory_module';
+            $update['fields'] = array(
+                'title' => strtoupper($post['title']),
+                'updated_by' => $post['user_id'],
+                'updated_at' => $timestamp
+            );
+            $update['filters'] = array('id' => $post['id']);
+            $update = $this->builder->create_update($update);
+
+            $result = array(
+                'status' => true,
+                'message' => 'Update Success!'
+            );
+        }
+        echo json_encode($result);
+    }
+
+    public function saveSubModule_post(){
+        $post = $this->input->post();
+        $timestamp = date("Y-m-d H:i:s");
+
+        if(isset($post['id'])){
+            $update['table_name'] = 'laboratory_submodule';
+            $update['fields'] = array(
+                'mod_id' => $post['mod_id'],
+                'title' => strtoupper($post['title']),
+                'amount' => $post['amount'],
+                'abbr' => strtoupper($post['abbr']),
+                'updated_by' => $post['user_id'],
+                'updated_at' => $timestamp
+            );
+            $update['filters'] = array('id' => $post['id']);
+            $update = $this->builder->create_update($update);
+            $result = array(
+                'status' => true,
+                'message' => 'Update Success!'
+            );
+        }else{
+            $insert['table_name'] = 'laboratory_submodule';
+            $insert['fields'] = array(
+                'mod_id' => $post['mod_id'],
+                'title' => strtoupper($post['title']),
+                'amount' => $post['amount'],
+                'abbr' => strtoupper($post['abbr']),
+                'created_by' => $post['user_id'],
+                'created_at' => $timestamp
+            );
+            $insert = $this->builder->create_insert($insert);
+            $result = array(
+                'status' => true,
+                'message' => 'Insert Success!'
+            );
+        }
+        echo json_encode($result);
+    }
+
+    public function saveSubSubModule_post(){
+        $post = $this->input->post();
+        $timestamp = date("Y-m-d H:i:s");
+
+        if(isset($post['id'])){
+            $update['table_name'] = 'laboratory_subsubmodule';
+            $update['fields'] = array(
+                'mod_id' => $post['mod_id'],
+                'submod_id' => strtoupper($post['submod_id']),
+                'title' => strtoupper($post['title']),
+                'result_range' => $post['result_range'],
+                'updated_by' => $post['user_id'],
+                'updated_at' => $timestamp
+            );
+            $update['filters'] = array('id' => $post['id']);
+            $update = $this->builder->create_update($update);
+            $result = array(
+                'status' => true,
+                'message' => 'Update Success!'
+            );
+        }else{
+            $insert['table_name'] = 'laboratory_subsubmodule';
+            $insert['fields'] = array(
+                'mod_id' => $post['mod_id'],
+                'submod_id' => strtoupper($post['submod_id']),
+                'title' => strtoupper($post['title']),
+                'result_range' => $post['result_range'],
+                'created_by' => $post['user_id'],
+                'created_at' => $timestamp
+            );
+            $insert = $this->builder->create_insert($insert);
+            $result = array(
+                'status' => true,
+                'message' => 'Insert Success!'
+            );
+        }
         echo json_encode($result);
     }
 }

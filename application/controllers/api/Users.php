@@ -11,10 +11,10 @@ class Users extends REST_Controller {
     }
 
     public function login_post(){
-
         $isLogin = $this->usermodel->login($this->input->post());
         if($isLogin['status'] == true){
-            $active_user = $this->usermodel->get_active_user($isLogin['id']);
+            $active_user = $this->usermodel->get_active_user($isLogin['user_id']);
+            $active_user['user_access'] = $this->usermodel->get_usermodaccess($isLogin['user_id']);
             $active_user['message'] = 'Login Successful!';
             $active_user['status'] = true;
             $result = $active_user;
@@ -24,12 +24,11 @@ class Users extends REST_Controller {
                 'status' => false
             );
         }
-
         echo json_encode($result);
     }
 
     public function registerUser_post(){
-        $isExist = $this->usermodel->checkuser($this->input->post('username'));
+        $isExist = $this->usermodel->checkuser($this->input->post('user_id'));
         if($isExist == false){
             $register = $this->usermodel->register($this->input->post());
             if($register == true){
@@ -46,7 +45,7 @@ class Users extends REST_Controller {
             
         }else{
             $result = array(
-                'message' => 'Username already exist!',
+                'message' => 'User already exist!',
                 'status' => false
             );
         }
@@ -54,12 +53,18 @@ class Users extends REST_Controller {
         echo json_encode($result);
     }
 
+    public function getEmployees_get(){
+        $str = "select id,concat(lastname,', ',firstname,' ',middlename)as fullname,concat(id,' => ',concat(lastname,', ',firstname,' ',middlename))as `desc` from employees where employee_status_id = 'A'";
+        echo json_encode($this->db->query($str)->result_array());
+    }
+
     public function getUser_post(){
         echo json_encode($this->usermodel->get_active_user($this->input->post()));
     }
 
     public function getAllUser_get(){
-        echo json_encode($this->db->get('users')->result());
+        $str = "select user_id,concat(user_id,' => ',fullname)as `desc`,fullname,last_login,created_at,`active`,password,user_type from users where `active` = 'Y' order by fullname";
+        echo json_encode($this->db->query($str)->result_array());
     }
 
     public function testpost_post(){

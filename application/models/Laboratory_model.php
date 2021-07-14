@@ -13,9 +13,9 @@ class Laboratory_model extends CI_Model{
             $mod_id = substr($mod_id,0,strlen($mod_id) -1) . ")";
             $result = $this->db->get_where('laboratory_module' , 'id IN' . $mod_id );
         }else{
-            $result = $this->db->get('laboratory_module');
+            $str = "select * from laboratory_module order by id";
+            $result = $this->db->query($str);
         }
-
         return $result;
     }
 
@@ -24,7 +24,7 @@ class Laboratory_model extends CI_Model{
     }
 
     public function loadsubsubmodule($id){
-        $str = "select aa.*,bb.abbr from laboratory_subsubmodule aa 
+        $str = "select aa.*,bb.abbr,aa.result_range from laboratory_subsubmodule aa 
         left join laboratory_submodule bb on bb.id = aa.submod_id
         where aa.mod_id = {$id}";
         return $this->db->query($str);

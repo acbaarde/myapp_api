@@ -133,5 +133,14 @@ class Mylib extends CI_Model{
 		return (int) round($nVar + 0,2);
 	}
 
+	public function check_postinglogs($pperiod,$module){
+		$result = $this->db->get_where('posting_logs' , array('payperiod' => $pperiod, 'module' => $module));
+		if($result->num_rows() > 0){
+			$result = true;
+		}else{
+			$result = false;
+		}
+		return $result;
+	}
 
 }

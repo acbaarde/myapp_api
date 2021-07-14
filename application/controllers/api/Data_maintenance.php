@@ -32,6 +32,9 @@ class Data_maintenance extends REST_Controller {
     public function getGender_get(){
         echo json_encode($this->db->get('dm_gender')->result_array());
     }
+    public function getDiscount_get(){
+        echo json_encode($this->db->get('dm_discount')->result_array());
+    }
     public function getPhysicians_get(){
         echo json_encode($this->db->get('physicians')->result_array());
     }
@@ -69,8 +72,9 @@ class Data_maintenance extends REST_Controller {
         echo json_encode($this->datamaintenance->updateworksched($this->input->post()));
     }
 
-    public function dashboardData_get(){
-        $str = "select submod_id from appointments";
+    public function dashboardData_post(){
+        $post = $this->input->post();
+        $str = "select submod_id from appointments where year(created_at) = '".$post['year']."' and month(created_at) = '".$post['month']."' ";
         $res = $this->db->query($str)->result_array();
         $submod = [];
         foreach($res as $row){

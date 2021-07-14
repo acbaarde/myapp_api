@@ -135,4 +135,8 @@ class Appointment extends REST_Controller {
         $mod_res = json_decode($this->input->post('lab_test'));
         echo json_encode(count($mod_res));
     }
+
+    public function approved_reject_post(){
+        echo json_encode($this->appointmentmodel->app_rej($this->input->post()));
+    }
 }

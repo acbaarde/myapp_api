@@ -64,4 +64,115 @@ class Reports_model extends CI_Model{
 
         return $result;
     }
+
+    public function rebates($data=array()){
+        $post = $data;
+        $str = "select 
+        aa.physician_id,
+        bb.lastname,
+        bb.firstname,
+        bb.middlename,
+        aa.submod_id,
+        bb.age,
+        bb.gender,
+        sum(aa.totalamount)as total_amount,
+        aa.created_at
+        from appointments aa
+        left join patients bb on bb.id = aa.patient_id
+        where aa.discount_type = ''
+        and aa.discount = 0
+        and aa.approved = 'Y'
+        and aa.physician_id = '". $post['id'] ."'
+        and date(aa.created_at) >= date('". $post['dateFrom'] ."')
+        and date(aa.created_at) <= date('". $post['dateTo'] ."')
+        group by date(aa.created_at)
+        order by date(aa.created_at)";
+        $query = $this->db->query($str);
+        if($query->num_rows() > 0){
+            $ddte = [];
+            $result_rows = $query->result_array();
+            $interval = date_diff(date_create($post['dateFrom']), date_create($post['dateTo']));
+            for($i = 0; $i <= $interval->days; $i++){
+                $nextdate = date_format(date_add(date_create($post['dateFrom']), date_interval_create_from_date_string("{$i} days")), 'Y-m-d');
+                array_push($ddte, $nextdate);
+            }
+        }else{
+            $result_rows = [];
+        }
+
+        return $result_rows;
+    }
+    public function rebates_brkdwn($data=array()){
+        $post = $data;
+        $str = "select 
+        aa.physician_id,
+        cc.lastname,
+        cc.firstname,
+        cc.middlename,
+        aa.submod_id,
+        cc.age,
+        cc.agetype,
+        cc.gender,
+        aa.totalamount,
+        DATE(aa.created_at)AS `date`
+        FROM appointments aa
+        LEFT JOIN physicians bb ON bb.id = aa.physician_id
+        LEFT JOIN patients cc ON cc.id = aa.patient_id
+        WHERE aa.discount_type = ''
+        AND aa.discount = 0
+        AND aa.approved = 'Y'
+        AND physician_id = '".$post['id']."'
+        AND DATE(aa.created_at) >= DATE('".$post['dateFrom']."')
+        AND DATE(aa.created_at) <= DATE('".$post['dateTo']."')
+        ORDER BY aa.physician_id,DATE(aa.created_at)";
+        return $this->db->query($str)->result_array();
+    }
+
+    public function total_rebates($data=array()){
+        $post = $data;
+        $str = "
+        select SUM(totalamount)AS `total` FROM appointments 
+        WHERE physician_id = '".$post['id']."'
+        AND discount_type = ''
+        AND discount = 0
+        AND approved = 'Y'
+        AND DATE(created_at) >= DATE('".$post['dateFrom']."') 
+        AND DATE(created_at) <= DATE('".$post['dateTo']."')";
+        return $this->db->query($str)->row_array()['total'];
+    }
+
+    public function dateRange($data=array()){
+        $post = $data;
+        $ddte = [];
+        $interval = date_diff(date_create($post['dateFrom']), date_create($post['dateTo']));
+        for($i = 0; $i <= $interval->days; $i++){
+            $nextdate = date_format(date_add(date_create($post['dateFrom']), date_interval_create_from_date_string("{$i} days")), 'Y-m-d');
+            array_push($ddte, $nextdate);
+        }
+        return $ddte;
+    }
+
+    public function lab_count($date){
+        $submods = $this->db->query("select * from laboratory_submodule order by mod_id,id")->result_array();
+        $id_arr = [];
+        $submod_ids = $this->db->query("select submod_id FROM appointments WHERE DATE(created_at) = DATE('".$date."')")->result_array();
+        foreach($submod_ids as $id_row){
+            $ids = explode(",", $id_row['submod_id']);
+            foreach($ids as $id){
+                array_push($id_arr, $id);
+            }
+        }
+        $sub_arr = [];
+        $res = [];
+        foreach($submods as $row){
+            $cnt = 0;
+            foreach($id_arr as $idarr){
+                if($idarr == $row['id']){
+                    $cnt++;
+                }
+            }
+            array_push($res, $cnt);
+        }
+        return $res;
+    }
 }

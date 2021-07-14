@@ -4,7 +4,7 @@ class User_model extends CI_Model{
 
     public function login($data = array()){
         $username = $data['username'];
-        $password = $data['password'];
+        $password = md5($data['password']);
 
         $str = "select * from users as user where user_id = '{$username}' and password = '{$password}' and `active` = 'Y'";
         $query = $this->db->query($str);
@@ -43,12 +43,8 @@ class User_model extends CI_Model{
 
     public function register($data = array()){
         $user_id = $data['user_id'];
-        // $password = $this->encryption->encrypt($data['password']);
-        $password = $data['password'];
+        $password = md5($data['password']);
         $user_type = $data['user_type'];
-        // $firstname = $data['firstname'];
-        // $lastname = $data['lastname'];
-        // $user_type = $data['user_type'];
         $created_at = date('Y-m-d H:i:s');
 
         $str = "select concat(lastname,', ',firstname,' ',middlename)as fullname from employees where id = {$user_id}";
@@ -59,9 +55,6 @@ class User_model extends CI_Model{
             'user_id' => $user_id,
             'password' => $password,
             'fullname' => $emp['fullname'],
-            // 'firstname' => $firstname,
-            // 'lastname' => $lastname,
-            // 'user_type' => $user_type,
             'created_at' => $created_at,
             'active' => 'Y',
             'user_type' => $user_type
@@ -120,8 +113,6 @@ class User_model extends CI_Model{
     }
 
     public function get_active_user($user_id){
-        // $access_token = $data['access_token'];
-        // $str = "select user.*,token.access_token from users as user left join users_access_token as token on token.user_id = user.id where token.access_token = '{$access_token}'";
         $str = "select * from users where user_id = '{$user_id}'";
         $query = $this->db->query($str)->row_array();
         return $query;
@@ -147,20 +138,12 @@ class User_model extends CI_Model{
 
     public function update_user($data=array()){
         $user_id = $data['user_id'];
-        // $username = $data['username'];
-        $password = $data['password'];
+        $password = md5($data['password']);
         $user_type = $data['user_type'];
-        // $firstname = $data['firstname'];
-        // $lastname = $data['lastname'];
-        // $user_type = $data['user_type'];
 
         $update = array(
-            // 'user_id' => $user_id,
             'password' => $password,
             'user_type' => $user_type
-            // 'firstname' => $firstname,
-            // 'lastname' => $lastname,
-            // 'user_type' => $user_type
         );
         $this->db->trans_begin();
         $this->db->update('users', $update, array('user_id' => $user_id));

@@ -91,4 +91,22 @@ class Timekeeping extends REST_Controller {
     public function deleteSalaryAdjustment_post(){
         echo json_encode($this->timekeepingmodel->deletesalaryadjustment($this->input->post()));
     }
+
+    public function activePayperiod_get(){
+        $pp = $this->mylib->get_active_pp();
+        if($pp->num_rows() > 0){
+            $result = array(
+                'status' => true,
+                'message' => 'Success!',
+                'pperiod' => $pp->row_array()['pperiod']
+            );
+        }else{
+            $result = array(
+                'status' => false,
+                'message' => 'No payroll period established!',
+                'pperiod' => ''
+            );
+        }
+        echo json_encode($result);
+    }
 }

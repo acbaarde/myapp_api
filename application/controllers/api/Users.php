@@ -63,7 +63,7 @@ class Users extends REST_Controller {
     }
 
     public function getAllUser_get(){
-        $str = "select user_id,concat(user_id,' => ',fullname)as `desc`,fullname,last_login,created_at,`active`,password,user_type from users where `active` = 'Y' order by fullname";
+        $str = "select user_id,concat(user_id,' => ',fullname)as `desc`,fullname,last_login,created_at,`active`,user_type from users where `active` = 'Y' order by fullname";
         echo json_encode($this->db->query($str)->result_array());
     }
 

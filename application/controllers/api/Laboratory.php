@@ -30,7 +30,8 @@ class Laboratory extends REST_Controller {
                         'value' => $sub_row['id'],
                         'text' => $sub_row['title'] . " (" . $sub_row['amount'] . " Php)",
                         'amount' => $sub_row['amount'],
-                        'mod_id' => $sub_row['mod_id']
+                        'mod_id' => $sub_row['mod_id'],
+                        'abbr' => $sub_row['abbr']
                         // 'sub_test' => 0,
                         // 'sub_result' => '0.00'
                     ]);
@@ -45,7 +46,8 @@ class Laboratory extends REST_Controller {
                                 'submod_id' => $subsub_row['submod_id'],
                                 'title' => $subsub_row['title'],
                                 'result' => $labtest['result_value'],
-                                'submod_title' => $subsub_row['abbr']
+                                'submod_title' => $subsub_row['abbr'],
+                                'result_range' => $subsub_row['result_range']
                             ]);
                             $exist++;
                         }
@@ -56,7 +58,8 @@ class Laboratory extends REST_Controller {
                             'submod_id' => $subsub_row['submod_id'],
                             'title' => $subsub_row['title'],
                             'result' => '0.00',
-                            'submod_title' => $subsub_row['abbr']
+                            'submod_title' => $subsub_row['abbr'],
+                            'result_range' => $subsub_row['result_range']
                         ]);
                     }
                 }

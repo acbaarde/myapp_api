@@ -182,7 +182,8 @@ class Timekeeping_model extends CI_Model{
     public function processmanhour(){
         $year = $this->mylib->get_active_yr();
         $payperiod = $this->mylib->get_active_pp()->row_array();
-        $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
+        // $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
+        $posting_logs = $this->mylib->check_postinglogs($payperiod['pperiod'],'postmanhour');
         $employees = $this->db->get_where('employees', "employee_status_id != 'S'")->result_array();
         $grace_period = $this->db->get('dm_work_shift')->result_array();
         $empno = [];
@@ -195,7 +196,7 @@ class Timekeeping_model extends CI_Model{
         $temp_dtr = "{$pansamantala}.dtr_".$this->mylib->random_string(10);
         $temp_mhr = "{$pansamantala}.mhr_".$this->mylib->random_string(10);
         //check if manhour posting already done
-        if($posting_logs->num_rows() == 0){
+        if($posting_logs == false){
             $str = "create table if not exists {$temp_dtr}
             select * from dtr_{$year} where `date` >= date('".$payperiod['cfrom']."') and `date` <= date('".$payperiod['cto']."') and employee_id in ({$empno})";
             $this->db->query($str);
@@ -386,9 +387,9 @@ class Timekeeping_model extends CI_Model{
         $user_id = $data['user_id'];
         $year = $this->mylib->get_active_yr();
         $payperiod = $this->mylib->get_active_pp()->row_array();
-        $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
-        
-        if($posting_logs->num_rows() == 0){
+        // $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
+        $posting_logs = $this->mylib->check_postinglogs($payperiod['pperiod'],'postmanhour');
+        if($posting_logs == false){
             $data = array(
                 'module' => 'postmanhour',
                 'payperiod' => $payperiod['pperiod'],

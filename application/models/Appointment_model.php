@@ -71,13 +71,14 @@ class Appointment_model extends CI_Model{
         //DELETE lab tests
         $this->db->delete('patient_lab_test', array('appointment_id' => $appointment_id, 'patient_id' => $patient_id));
         if(count($lab_tests) > 0){
-            $insert_lab_test = "insert into patient_lab_test (appointment_id,patient_id,subsubmod_id,result_name,result_value,created_at)values";
+            $insert_lab_test = "insert into patient_lab_test (appointment_id,patient_id,subsubmod_id,result_name,result_range,result_value,created_at)values";
             foreach($lab_tests as $lab_test){
                 $insert_lab_test .= "(".
                     $this->db->escape($appointment_id) . "," .
                     $this->db->escape($patient_id) . "," .
                     $this->db->escape($lab_test->id) . "," .
                     $this->db->escape($lab_test->title) . "," .
+                    $this->db->escape($lab_test->result_range) . "," .
                     $this->db->escape($lab_test->result) . "," .
                     $this->db->escape($timestamp) . "),";
             }
@@ -109,6 +110,7 @@ class Appointment_model extends CI_Model{
         aa.middlename,
         aa.lastname,
         aa.age,
+        aa.agetype,
         aa.gender,
         aa.status,
         aa.contact,
@@ -258,6 +260,29 @@ class Appointment_model extends CI_Model{
             $result = true;
         }
 
+        return $result;
+    }
+    public function app_rej($data=array()){
+        $post = $this->input->post();
+        $timestamp = date('Y-m-d H:i:s');
+        $status = $post['status'] == 'approved' ? 'Y' : 'N';
+        $fields = array(
+            'approved' => $status,
+            'approved_by' => $post['user_id'],
+            'approved_date' => $timestamp
+        );
+        $where = array(
+            'id' => $post['appointment_id']
+        );
+        $this->db->trans_start();
+        $this->db->update('appointments', $fields, $where);
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = false;
+        }else{
+            $this->db->trans_commit();
+            $result = true;
+        }
         return $result;
     }
 }

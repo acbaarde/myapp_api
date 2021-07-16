@@ -151,4 +151,8 @@ class Reports extends REST_Controller {
     //     }
     //     echo json_encode($result);
     // }
+
+    public function Payslip_post(){
+        echo json_encode($this->reportsmodel->payslip($this->input->post()));
+    }
 }

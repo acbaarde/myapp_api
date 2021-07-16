@@ -175,4 +175,64 @@ class Reports_model extends CI_Model{
         }
         return $res;
     }
+
+    public function payslip($data = array()){
+        $post = $data;
+        $payperiod = $this->db->get_where('dm_pp'.$post['year'], array('id' => $post['payperiod_id']))->row_array();
+        $str = "select
+        aa.*,
+        bb.*,
+        cc.*,
+        dd.id AS `adjustment_id`,
+        dd.adjustments AS total_adjustments
+        FROM payslip_".$post['year']." AS aa
+        LEFT JOIN employee_view AS bb ON bb.id = aa.employee_id
+        LEFT JOIN mhr_".$post['year']." AS cc ON cc.employee_id = aa.employee_id AND cc.payperiod = aa.payperiod
+        LEFT JOIN salary_adjustments AS dd ON dd.employee_id = aa.employee_id AND dd.payperiod = aa.payperiod
+        WHERE DATE(aa.payperiod) = DATE('".$payperiod['pperiod']."')";
+        $employees = $this->db->query($str);
+
+        $results = [];
+        if($employees->num_rows() > 0){
+            $employees = $employees->result_array();
+            foreach($employees as $k=>$row){
+                $sal_per_hr = floatval($row['salary']) / 8;
+                array_push($results, [
+                    'payperiod' => $row['payperiod'],
+                    'lastname' => $row['lastname'],
+                    'firstname' => $row['firstname'],
+                    'middlename' => $row['middlename'],
+                    'position' => $row['position'],
+                    'salary' => $row['salary'],
+                    'reg_hrs' => $row['regular'],
+                    'reg_hrs_pay' => round($sal_per_hr * floatval($row['regular']),2),
+                    'reg_ot' => $row['regular_ot'],
+                    'reg_ot_pay' => round($sal_per_hr * floatval($row['regular_ot']),2),
+                    'gross' => $row['gross'],
+                    'net' => $row['net'],
+                    'total_adjustments' => $row['total_adjustments'],
+                    'deductions' => []
+                ]);
+
+                $adjustments = $this->db->get_where('salary_adjustments_breakdown', array('adjustment_id' => $row['adjustment_id']))->result_array();
+                foreach($adjustments as $adj_row){
+                    array_push($results[$k]['deductions'], [
+                        'description' => $adj_row['description'],
+                        'amount' => $adj_row['amount']
+                    ]);
+                }
+            }
+
+            $result = array(
+                'status' => true,
+                'results' => $results
+            );
+        }else{
+            $result = array(
+                'status' => false,
+            );
+        }
+
+        return $result;
+    }
 }

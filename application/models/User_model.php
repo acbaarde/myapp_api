@@ -45,18 +45,20 @@ class User_model extends CI_Model{
         $user_id = $data['user_id'];
         $password = md5($data['password']);
         $user_type = $data['user_type'];
+        $fullname = strtoupper($data['fullname']);
+        $status = $data['status'];
         $created_at = date('Y-m-d H:i:s');
 
-        $str = "select concat(lastname,', ',firstname,' ',middlename)as fullname from employees where id = {$user_id}";
-        $emp = $this->db->query($str)->row_array();
+        // $str = "select concat(lastname,', ',firstname,' ',middlename)as fullname from employees where id = {$user_id}";
+        // $emp = $this->db->query($str)->row_array();
 
         //insert users table
         $insert = array(
             'user_id' => $user_id,
             'password' => $password,
-            'fullname' => $emp['fullname'],
+            'fullname' => $fullname,
             'created_at' => $created_at,
-            'active' => 'Y',
+            'active' => $status,
             'user_type' => $user_type
         );
 
@@ -113,7 +115,14 @@ class User_model extends CI_Model{
     }
 
     public function get_active_user($user_id){
-        $str = "select * from users where user_id = '{$user_id}'";
+        $str = "select 
+        aa.user_id,
+        aa.fullname,
+        aa.user_type,
+        (select `desc` from dm_position where id = bb.position_id)as user_posn
+        from users as aa
+        left join employees as bb on bb.id = aa.user_id
+        where aa.user_id = '{$user_id}'";
         $query = $this->db->query($str)->row_array();
         return $query;
     }
@@ -138,12 +147,16 @@ class User_model extends CI_Model{
 
     public function update_user($data=array()){
         $user_id = $data['user_id'];
-        $password = md5($data['password']);
+        $password = $this->mylib->isValidMd5($data['password']) == 1 ? $data['password'] : md5($data['password']);
         $user_type = $data['user_type'];
+        $fullname = strtoupper($data['fullname']);
+        $status = $data['status'];
 
         $update = array(
             'password' => $password,
-            'user_type' => $user_type
+            'user_type' => $user_type,
+            'fullname' => $fullname,
+            'active' => $status
         );
         $this->db->trans_begin();
         $this->db->update('users', $update, array('user_id' => $user_id));
@@ -158,4 +171,33 @@ class User_model extends CI_Model{
         return $result;
     }
 
-}
+    public function getalluser(){
+        $str = "
+        select 
+        user_id,
+        concat(user_id,' => ',fullname)as `desc`,
+        fullname,
+        last_login,
+        created_at,
+        `active`,
+        user_type,
+        password 
+        from users order by fullname";
+        $users = $this->db->query($str)->result_array();
+
+        $result = [];
+        foreach($users as $rw){
+            array_push($result, array(
+                'user_id' => $rw['user_id'],
+                'desc' => $rw['desc'],
+                'fullname' => $rw['fullname'],
+                'last_login' => $rw['last_login'],
+                'created_at' => $rw['created_at'],
+                'active' => $rw['active'],
+                'user_type' => $rw['user_type'],
+                'password' => $rw['password']
+            ));
+        }
+        return $result;
+    }
+}  

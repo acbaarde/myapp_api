@@ -121,6 +121,13 @@ class Data_maintenance extends REST_Controller {
         return $this->db->query($str)->row_array()['cnt'];
     }
 
+    public function getAppointments_get(){
+        $post = $this->input->post();
+        $timestamp = date("Y-m-d");
+        $str = "select * from appointment_view where date(created_at) = '".$timestamp."' order by created_at";
+        echo json_encode($this->db->query($str)->result_array());
+    }
+
     public function loadModule_get(){
         $submodule = "select 
         bb.id as mod_id,

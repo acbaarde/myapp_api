@@ -138,20 +138,6 @@ class Reports extends REST_Controller {
 
         echo json_encode($result);
     }
-
-    // public function generateReports_post(){
-    //     $post = $this->input->post();
-    //     $submod_id = $this->db->get_where('appointments', array('id' => $post['appointment_id']))->row_array()['submod_id'];
-    //     $submod_ids = explode(",", $submod_id);
-    //     $result = [];
-    //     foreach($submod_ids as $submod_id){
-    //         array_push($result, [
-    //             'id' => $submod_id
-    //         ]);
-    //     }
-    //     echo json_encode($result);
-    // }
-
     public function Payslip_post(){
         echo json_encode($this->reportsmodel->payslip($this->input->post()));
     }

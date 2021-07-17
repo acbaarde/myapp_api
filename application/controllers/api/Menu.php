@@ -16,8 +16,6 @@ class Menu extends REST_Controller {
     }
     
     public function modMenu_get(){
-        // $str = "select * from module_menu where `active` = 'A' GROUP BY mod_code1 ORDER BY mod_code1";
-        // $query = $this->db->query($str);
         $query = $this->db->query($this->menumodel->mod_menu1());
         if($query->num_rows() > 0){
             $rows = $query->result_array();
@@ -29,9 +27,6 @@ class Menu extends REST_Controller {
                     'menu_icon' => $row1['mod_icon1'],
                     'sub_menus' => []
                 ]);
-
-                // $str = "select * from module_menu where mod_code1 = " . $this->db->escape($row1['mod_code1']) . " and mod_code2 != '' and `active` = 'A' GROUP BY mod_code2 order by mod_code2 ";
-                // $query = $this->db->query($str);
                 $query = $this->db->query($this->menumodel->mod_menu2($row1['mod_code1']));
                 if($query->num_rows() > 0){
                     $rows = $query->result_array();
@@ -43,9 +38,6 @@ class Menu extends REST_Controller {
                             'menu_path' => $row2['mod_url2'],
                             'sub_menus' => []
                         ]);
-                        
-                        // $str = "select * FROM module_menu WHERE mod_code1 = " . $this->db->escape($row1['mod_code1']) . " and mod_code2 = " . $this->db->escape($row2['mod_code2']) . " AND mod_code3 != '' AND `active` = 'A' ORDER BY mod_code3";
-                        // $query = $this->db->query($str);
                         $query = $this->db->query($this->menumodel->mod_menu3($row1['mod_code1'],$row2['mod_code2']));
                         if($query->num_rows() > 0){
                             $rows = $query->result_array();
@@ -61,7 +53,6 @@ class Menu extends REST_Controller {
                 
             }
         }
-        // echo json_encode($data == '' ? ['message' => 'no menu(s) found!'] : $data);
         echo json_encode(isset($data) ? $data : ['message' => 'No Menu(s) Found!']);
     }
 

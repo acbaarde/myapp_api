@@ -10,7 +10,8 @@ class Timekeeping_model extends CI_Model{
         cc.desc as employee_status_desc
         from employees as aa 
         left join dm_position as bb on bb.id = aa. position_id
-        left join dm_employee_status as cc on cc.id = aa.employee_status_id";
+        left join dm_employee_status as cc on cc.id = aa.employee_status_id
+        where aa.employee_status_id in ('A','H')";
         return $this->db->query($str);
     }
 
@@ -184,7 +185,7 @@ class Timekeeping_model extends CI_Model{
         $payperiod = $this->mylib->get_active_pp()->row_array();
         // $posting_logs = $this->db->get_where('posting_logs', array('payperiod' => $payperiod['pperiod'], 'module' => 'postmanhour'));
         $posting_logs = $this->mylib->check_postinglogs($payperiod['pperiod'],'postmanhour');
-        $employees = $this->db->get_where('employees', "employee_status_id != 'S'")->result_array();
+        $employees = $this->db->get_where('employees', "employee_status_id in ('A','H')")->result_array();
         $grace_period = $this->db->get('dm_work_shift')->result_array();
         $empno = [];
         foreach($employees as $emp){

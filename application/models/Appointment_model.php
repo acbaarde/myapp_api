@@ -225,7 +225,7 @@ class Appointment_model extends CI_Model{
         FROM appointments AS aa
         LEFT JOIN patients AS bb ON bb.id = aa.patient_id
         LEFT JOIN physicians AS cc ON cc.id = aa.physician_id
-        WHERE aa.status = 'F' and aa.posted = 'Y' order by aa.created_at desc";
+        WHERE aa.status = 'F' and aa.posted = 'Y' order by aa.created_at desc limit 100";
         return $this->db->query($str);
     }
 

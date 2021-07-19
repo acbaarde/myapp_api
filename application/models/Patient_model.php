@@ -3,6 +3,7 @@
 class Patient_model extends CI_Model{
 
     public function insertpatient($data=array()){
+        $newId = $this->mylib->patient_id_ctr();
         $firstname = $data['firstname'];
         $lastname = $data['lastname'];
         $middlename = $data['middlename'];
@@ -15,6 +16,7 @@ class Patient_model extends CI_Model{
         $created_at = date('Y-m-d H:i:s');
 
         $insert = array(
+            'id' => $newId,
             'firstname' => strtoupper($firstname),
             'lastname' => strtoupper($lastname),
             'middlename' => strtoupper($middlename),
@@ -29,6 +31,9 @@ class Patient_model extends CI_Model{
 
         $this->db->trans_begin();
         $this->db->insert('patients', $insert);
+
+        //store new created id
+        $this->db->insert('id_ctr_patient', array('id_number' => $newId));
 
         if($this->db->trans_status() === FALSE){
             $this->db->trans_rollback();

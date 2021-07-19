@@ -45,6 +45,17 @@ class Mylib extends CI_Model{
 		}
 		return $newid;
 	}
+	public function patient_id_ctr(){
+        $date = substr(date("Ymd"),2,6);
+        $str = "select (id_number + 1)as id_number from id_ctr_patient where substr(id_number,1,6) = '{$date}' order by id_number desc limit 1";
+        $query = $this->db->query($str)->row_array();
+		if(!empty($query)){
+			$newid = $query['id_number'];
+		}else{
+			$newid = $date . '001';
+		}
+        return $newid;
+    }
 
     public function get_active_yr(){
         return $this->db->get_where('year', array('post' => ''))->row_array()['year'];

@@ -36,7 +36,7 @@ class Data_maintenance extends REST_Controller {
         echo json_encode($this->db->get('dm_discount')->result_array());
     }
     public function getPhysicians_get(){
-        echo json_encode($this->db->get('physicians')->result_array());
+        echo json_encode($this->mylib->getPhysicians()->result_array());
     }
     public function getPayperiod_get(){
         $year = $this->mylib->get_active_yr();

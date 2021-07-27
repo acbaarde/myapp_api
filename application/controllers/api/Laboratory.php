@@ -11,6 +11,12 @@ class Laboratory extends REST_Controller {
        $this->load->library('Query_builder','','builder');
     }
 
+    public function getLabModule_get(){
+        $result['module'] = $this->db->get('laboratory_module')->result_array();
+        $result['submodule'] = $this->db->get('laboratory_submodule')->result_array();
+        echo json_encode($result);
+    }
+
     public function loadLabmodule_post(){
         $result = $this->laboratorymodel->loadlabmodule($this->input->post());
         $patientlabtest = $this->laboratorymodel->load_patientlabtest($this->input->post('appointment_id'))->result_array();
@@ -57,7 +63,7 @@ class Laboratory extends REST_Controller {
                             'id' => $subsub_row['id'],
                             'submod_id' => $subsub_row['submod_id'],
                             'title' => $subsub_row['title'],
-                            'result' => '0.00',
+                            'result' => '',
                             'submod_title' => $subsub_row['abbr'],
                             'result_range' => $subsub_row['result_range']
                         ]);
@@ -83,11 +89,11 @@ class Laboratory extends REST_Controller {
     public function saveModule_post(){
         $post = $this->input->post();
         $timestamp = date("Y-m-d H:i:s");
-
         if($post['id'] == 'undefined'){
             $insert['table_name'] = 'laboratory_module';
             $insert['fields'] = array(
                 'title' => strtoupper($post['title']),
+                'send_out' => $post['send_out'],
                 'created_by' => $post['user_id'],
                 'created_at' => $timestamp
             );
@@ -100,6 +106,7 @@ class Laboratory extends REST_Controller {
             $update['table_name'] = 'laboratory_module';
             $update['fields'] = array(
                 'title' => strtoupper($post['title']),
+                'send_out' => $post['send_out'],
                 'updated_by' => $post['user_id'],
                 'updated_at' => $timestamp
             );

@@ -119,7 +119,8 @@ class User_model extends CI_Model{
         aa.user_id,
         aa.fullname,
         aa.user_type,
-        (select `desc` from dm_position where id = bb.position_id)as user_posn
+        (select `desc` from dm_position where id = bb.position_id)as user_posn,
+        bb.position_id as user_posn_id
         from users as aa
         left join employees as bb on bb.id = aa.user_id
         where aa.user_id = '{$user_id}'";
@@ -143,6 +144,24 @@ class User_model extends CI_Model{
         $user_id = $data['id'];
         $this->db->delete('users', array('id' => $user_id));
         return $this->db->affected_rows();
+    }
+
+    public function update_password($data=array()){
+        $post = $data;
+        $update = array(
+            'password' => md5($post['newpassword'])
+        );
+        $this->db->trans_begin();
+        $this->db->update('users', $update, array('user_id' => $post['user_id']));
+        
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = false;
+        }else{
+            $this->db->trans_commit();
+            $result = true;
+        }
+        return $result;
     }
 
     public function update_user($data=array()){

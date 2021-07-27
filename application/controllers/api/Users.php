@@ -101,4 +101,8 @@ class Users extends REST_Controller {
         }
         echo json_encode($result);
     }
+
+    public function updatePassword_post(){
+        echo json_encode($this->usermodel->update_password($this->input->post()));
+    }
 }

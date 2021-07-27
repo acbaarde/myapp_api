@@ -9,134 +9,83 @@ class Appointment extends REST_Controller {
        $this->load->model('Appointment_model', 'appointmentmodel');
        $this->load->model('Mylib', 'mylib');
     }
-
-    public function insertAppointment_post(){
-        $result = $this->appointmentmodel->insertappointment($this->input->post());
-        if($result['status'] == true){
-            $insertlabtest = $this->appointmentmodel->insert_patientlabtest($result['appointment_id'], $this->input->post());
-            if($insertlabtest == true){
-                $res = array(
-                    'message' => 'Insert Appointment Success!',
-                    'status' => true,
-                    'cdate' => $result['cdate'],
-                    'stat' => $result['stat']
-                );
-            }else{
-                $res = array(
-                    'message' => 'Error inserting lab tests!',
-                    'status' => false,
-                    'cdate' => [],
-                    'stat' => []
-                );
-            }
-        }else{
-            $res = array(
-                'message' => 'Insert Appointment Failed!',
-                'status' => false,
-                'cdate' => [],
-                'stat' => []
-            );
-        }
-        echo json_encode($res);
+    public function getEntry_post(){
+        $post = $this->input->post();
+        $str = 'select aa.*,bb.firstname,bb.middlename,bb.lastname,bb.gender,bb.age,bb.agetype,bb.address
+        FROM appointment_entries AS aa
+        LEFT JOIN patients AS bb ON bb.id = aa.patient_id
+        WHERE aa.id = "'.$post['id'].'" ';
+        $results['patient'] = $this->db->query($str)->row_array();
+        // $results['submodule'] = $this->db->get_where('appointment_lab_test', array('control_id' => $post['id']))->result_array();
+        $str = 'select
+            aa.id AS item_id,
+            aa.lab_id AS id,
+            aa.control_id,
+            aa.`status`,
+            cc.send_out,
+            aa.title,
+            aa.abbr,
+            aa.amount,
+            aa.created_by,
+            aa.created_at,
+            aa.printed_by,
+            aa.printed_at
+        FROM
+            appointment_lab_test AS aa
+            LEFT JOIN laboratory_submodule AS bb ON bb.id = aa.lab_id
+            LEFT JOIN laboratory_module AS cc ON cc.id = bb.mod_id
+        WHERE control_id = "'.$post['id'].'" ';
+        $results['submodule'] = $this->db->query($str)->result_array();
+        echo json_encode($results);
     }
-
-    public function getAppointment_post(){
-        $patients = $this->appointmentmodel->getappointment($this->input->post());
-        if($patients->num_rows() > 0){
-            $patients = $patients->row_array();
-            $lab_test = $this->appointmentmodel->getpatientlabtest($this->input->post());
-            $discount = $this->db->get('dm_discount');
-            $physicians = $this->mylib->getPhysicians();
-            $submod = $this->appointmentmodel->chipselected($patients['submod_id']);
-            $result = array(
-                'status' => true,
-                'patient' => $patients,
-                'lab_test' => $lab_test->result_array(),
-                'discount' => $discount->result_array(),
-                'physicians' => $physicians->result_array(),
-                'chips_selected' => $submod
-            );
+    public function getEntries_get(){
+        $str = "select
+            aa.id,
+            aa.status,
+            aa.patient_id,
+            bb.lastname,
+            bb.firstname,
+            bb.middlename,
+            aa.created_at
+            FROM appointment_entries AS aa
+            LEFT JOIN patients AS bb ON bb.id = aa.patient_id
+            LEFT JOIN physicians AS cc ON cc.id = aa.physician_id
+            LEFT JOIN dm_discount AS dd ON dd.id = aa.discount_id
+            order by id desc";
+        $results = $this->db->query($str)->result_array();
+        echo json_encode($results);
+    }
+    public function getCtrlNo_get(){
+        $str = "select (id + 1)as control_no from appointment_entries order by id desc limit 1";
+        $result = $this->db->query($str);
+        if($result->num_rows() > 0){
+            $result = $result->row_array();
         }else{
-            $result = array(
-                'status' => false,
-                'patient' => [],
-                'lab_test' => [],
-                'discount' => [],
-                'physicians' => [],
-                'chips_selected' => []
-            );
+            $result = array('control_no' => 1);
         }
         echo json_encode($result);
     }
 
-    public function updateAppointment_post(){
-        $result = $this->appointmentmodel->updateappointment($this->input->post());
-        if($result['status'] == true){
-            $insertlabtest = $this->appointmentmodel->insert_patientlabtest($this->input->post('appointment_id'), $this->input->post());
-            if($insertlabtest == true){
-                $result = array(
-                    'message' => 'Updating Appointment Success!',
-                    'status' => true,
-                    'cdate' => $result['cdate'],
-                    'stat' => $result['stat']
-                );
-            }else{
-                $result = array(
-                    'message' => 'Error updating lab tests!',
-                    'status' => false,
-                    'cdate' => [],
-                    'stat' => []
-                );
-            }
-        }else{
-            $result = array(
-                'message' => 'Updating Appointment Failed!',
-                'status' => false,
-                'cdate' => [],
-                'stat' => []
-            );
-        }
-        echo json_encode($result);
+    public function insertEntry_post(){
+        echo json_encode($this->appointmentmodel->insert_entry($this->input->post()));
+    }
+    public function updateEntry_post(){
+        echo json_encode($this->appointmentmodel->update_entry($this->input->post()));
     }
 
-    public function getAppointment_forreleased_get(){
-        $result = $this->appointmentmodel->getappointment_forreleased()->result_array();
-        if($this->db->affected_rows($result) > 0){
-            $res = array(
-                'result' => $result,
-                'status' => true 
-            );
-        }else{
-            $res = array(
-                'result' => [],
-                'status' => false 
-            );
-        }
-        echo json_encode($res);
+    public function saveResultEntry_post(){
+        echo json_encode($this->appointmentmodel->save_result_entry($this->input->post()));
     }
 
-    public function postAppointment_post(){
-        $result = $this->appointmentmodel->postappointment($this->input->post());
-        if($result == true){
-            $res = array(
-                'message' => 'Update Successful!',
-                'status' => true 
-            );
-        }else{
-            $res = array(
-                'message' => 'Update Failed!',
-                'status' => false 
-            );
-        }
-        echo json_encode($res);
+    public function getLabResults_post(){
+        $post = $this->input->post();
+        $results['lab_results'] = $this->db->get_where('appointment_lab_results', array('control_id' => $post['control_id'], 'lab_id' => $post['lab_id']))->result_array();
+        $results['result_remarks'] = $this->db->get_where('appointment_lab_test', array('id' => $post['item_id']))->row_array()['remarks'];
+        echo json_encode($results);
     }
 
-    public function insertmod_post(){
-        $mod_res = json_decode($this->input->post('lab_test'));
-        echo json_encode(count($mod_res));
-    }
+    public function cancelLabTest_post(){
+        echo json_encode($this->appointmentmodel->cancel_lab_test($this->input->post()));
 
-    public function approved_reject_post(){
-        echo json_encode($this->appointmentmodel->app_rej($this->input->post()));
     }
 }

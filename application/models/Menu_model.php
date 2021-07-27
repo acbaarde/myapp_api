@@ -27,7 +27,7 @@ class Menu_model extends CI_Model{
         $post = $data;
         $timestamp = date("Y-m-d H:i:s");
         $this->db->trans_begin();
-        $str = "delete from users_mod_access where user_id = ".$post['id'];
+        $str = "delete from users_mod_access where user_id = ". $this->db->escape($post['id']);
         $this->db->query($str);
         $mod_id = explode(",", $post['mod_id']);
         foreach($mod_id as $rw){

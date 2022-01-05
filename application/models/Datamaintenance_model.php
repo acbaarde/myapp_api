@@ -2,7 +2,7 @@
 
 class Datamaintenance_model extends CI_Model{
     public function insertphysician($data=array()){
-        $post = $this->input->post();
+        $post = $data;
         $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_start();
 
@@ -70,7 +70,7 @@ class Datamaintenance_model extends CI_Model{
     }
 
     public function insertpayperiod($data=array()){
-        $post = $this->input->post();
+        $post = $data;
         $year = $this->mylib->get_active_yr();
         $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_start();
@@ -102,7 +102,7 @@ class Datamaintenance_model extends CI_Model{
         return $result;
     }
     public function updatepayperiod($data=array()){
-        $post = $this->input->post();
+        $post = $data;
         $year = $this->mylib->get_active_yr();
         $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_start();
@@ -136,7 +136,7 @@ class Datamaintenance_model extends CI_Model{
     }
 
     public function insertworksched($data=array()){
-        $post = $this->input->post();
+        $post = $data;
         $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_start();
 
@@ -186,7 +186,7 @@ class Datamaintenance_model extends CI_Model{
         return $result;
     }
     public function updateworksched($data=array()){
-        $post = $this->input->post();
+        $post = $data;
         $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_start();
 
@@ -232,6 +232,35 @@ class Datamaintenance_model extends CI_Model{
             $result = array(
                 'status' => true,
                 'message' => 'Update Worksched Success!'
+            );
+        }
+        return $result;
+    }
+    public function save_company_info($data){
+        $post = $data;
+        $this->db->trans_start();
+
+        $fields = array(
+            'company_name' => $post['company_name'],
+            'address' => $post['address'],
+            'tel_no' => $post['tel_no'],
+            'doh_lic_no' => $post['doh_lic_no'],
+            'pathologist_name' => $post['pathologist_name'],
+            'pathologist_lic_no' => $post['pathologist_lic_no']
+        );
+        $this->db->update('dm_company_info', $fields, array('id'=>$post['id']));
+
+        if($this->db->trans_status() === false){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false,
+                'message' => 'Update Company Failed!'
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true,
+                'message' => 'Update Company Success!'
             );
         }
         return $result;

@@ -38,10 +38,18 @@ class Data_maintenance extends REST_Controller {
     public function getPhysicians_get(){
         echo json_encode($this->mylib->getPhysicians()->result_array());
     }
+    public function Physicians_get(){
+        echo json_encode($this->db->get('physicians')->result_array());
+    }
     public function getPayperiod_get(){
         $year = $this->mylib->get_active_yr();
         echo json_encode($this->db->get("dm_pp{$year}")->result_array());
     }
+    // public function totalRows_post(){
+    //     $post = $this->input->post();
+    //     $numRows = $this->db->get($post['table_name'])->num_rows();
+    //     echo json_encode($numRows);
+    // }
     public function getWorksched_get(){
         $result = array(
             'status' => true,
@@ -74,14 +82,15 @@ class Data_maintenance extends REST_Controller {
 
     public function dashboardData_post(){
         $post = $this->input->post();
-        $str = "select submod_id from appointments where year(created_at) = '".$post['year']."' and month(created_at) = '".$post['month']."' ";
+        $str = "select lab_id from appointment_lab_test where year(created_at) = '".$post['year']."' and month(created_at) = '".$post['month']."' ";
         $res = $this->db->query($str)->result_array();
         $submod = [];
         foreach($res as $row){
-            $row = explode(",", $row['submod_id']);
-            foreach($row as $rw){
-                array_push($submod, $rw);
-            }
+            // $rw = explode(",", $row['lab_id']);
+            array_push($submod, $row['lab_id']);
+            // foreach($row as $rw){
+            //     array_push($submod, $rw);
+            // }
         }
 
         $str = "select id,abbr from laboratory_submodule";
@@ -105,19 +114,45 @@ class Data_maintenance extends REST_Controller {
         $results['submod'] = $new_submod;
         $results['pending'] = $this->appointment_count('pending');
         $results['released'] = $this->appointment_count('released');
+        $results['for_approval'] = $this->appointment_count('for_approval');
         $results['all'] = $this->appointment_count('all');
         echo json_encode($results);
+    }
+    function getforreleased(){
+        $today = date("Y-m-d");
+        $str = "select aa.control_id,
+        bb.patient_id,
+        cc.lastname,
+        cc.firstname,
+        cc.middlename,
+        aa.title,
+        aa.abbr,
+        'COMPLETE' as 'status'
+        FROM appointment_lab_test AS aa
+        LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
+        LEFT JOIN patients AS cc ON cc.id = bb.patient_id
+        WHERE DATE(aa.created_at) = date('{$today}')
+        AND aa.`status` = 'P'
+        AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')
+        ORDER BY aa.control_id,bb.patient_id";
+        return $this->db->query($str)->result_array();
     }
     function appointment_count($status){
         $today = date("Y-m-d");
         if($status == 'pending'){
-            $optn = " and `approved` = '' ";
+            $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P'";
         }elseif($status == 'released'){
-            $optn = " and `status` = 'F' and `approved` = 'Y'";
+            $str = "select count(aa.id)as cnt FROM appointment_lab_test AS aa
+            LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
+            WHERE DATE(aa.created_at) = date('{$today}') 
+            AND aa.`status` = 'P'
+            AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')";
+        }elseif($status == 'for_approval'){
+            $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P' and discount_id = 3";
         }else{
-            $optn = "";
+            //ALL
+            $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}')";
         }
-        $str = "select count(id)as cnt from appointments where date(created_at) = date('{$today}') {$optn}";
         return $this->db->query($str)->row_array()['cnt'];
     }
 
@@ -125,7 +160,9 @@ class Data_maintenance extends REST_Controller {
         $post = $this->input->post();
         $timestamp = date("Y-m-d");
         $str = "select * from appointment_view where date(created_at) = '".$timestamp."' order by created_at";
-        echo json_encode($this->db->query($str)->result_array());
+        $results['all'] = $this->db->query($str)->result_array();
+        $results['for_released'] = $this->getforreleased();
+        echo json_encode($results);
     }
 
     public function loadModule_get(){
@@ -157,6 +194,14 @@ class Data_maintenance extends REST_Controller {
             'labtest' => $this->db->query($labtest)->result_array()
         );
         echo json_encode($result);
+    }
+
+    public function getCompanyInfo_get(){
+        echo json_encode($this->db->get('dm_company_info')->row_array());
+    }
+
+    public function saveCompanyInfo_post(){
+        echo json_encode($this->datamaintenance->save_company_info($this->input->post()));
     }
 
 }

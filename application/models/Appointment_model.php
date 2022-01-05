@@ -53,7 +53,6 @@ class Appointment_model extends CI_Model{
                 $sub_field = array(
                     'control_id' => $insertid,
                     'lab_id' => $rw_sub['submod_id'],
-                    'subsubmod_id' => $rw_sub['id'],
                     'result_title' => $rw_sub['title'],
                     'result_range' => $rw_sub['result_range']
                 );
@@ -74,7 +73,8 @@ class Appointment_model extends CI_Model{
             $result = array(
                 'status' => true,
                 'appointment_status' => 'P',
-                'control_id' => $insertid
+                'control_id' => $insertid,
+                'apprvd' => $this->db->get_where('appointment_entries', array('id' => $insertid))->row_array()['approved']
             );
         }
         return $result;
@@ -114,7 +114,8 @@ class Appointment_model extends CI_Model{
         $this->db->update('appointment_entries', $fields, array('id' => $id));
 
         $temp_labtest = $this->db->get_where('appointment_lab_test', array('control_id' => $id))->result_array();
-        $temp_labresults = $this->db->query("select * from appointment_lab_results where control_id = {$id} and lab_id in ({$submod_id}) ")->result_array();
+        $optn = $submod_id == '' ? '' : " and lab_id in ({$submod_id})";
+        $temp_labresults = $this->db->query("select * from appointment_lab_results where control_id = {$id} {$optn} ")->result_array();
         
         $this->db->query('delete from appointment_lab_test where control_id ="'.$id.'" ');
         $this->db->query('delete from appointment_lab_results where control_id ="'.$id.'" ');
@@ -139,7 +140,16 @@ class Appointment_model extends CI_Model{
                             'created_by' => $rw1['created_by'],
                             'created_at' => $rw1['created_at'],
                             'printed_by' => $rw1['printed_by'],
-                            'printed_at' => $rw1['printed_at']
+                            'printed_at' => $rw1['printed_at'],
+                            'cancelled_by' => $rw1['cancelled_by'],
+                            'cancelled_at' => $rw1['cancelled_at'],
+                            'reprinted_by' => $rw1['reprinted_by'],
+                            'reprinted_at' => $rw1['reprinted_at'],
+                            'so_clinic' => $rw1['so_clinic'],
+                            'so_remarks' => $rw1['so_remarks'],
+                            'so_status' => $rw1['so_status'],
+                            'so_received_by' => $rw1['so_received_by'],
+                            'so_received_at' => $rw1['so_received_at']
                         );
                         array_push($fields, $field);
                         break;
@@ -205,7 +215,8 @@ class Appointment_model extends CI_Model{
             $result = array(
                 'status' => true,
                 'appointment_status' => $this->db->get_where('appointment_entries', array('id' => $id))->row_array()['status'],
-                'control_id' => $id
+                'control_id' => $id,
+                'apprvd' => $this->db->get_where('appointment_entries', array('id' => $id))->row_array()['approved']
             );
         }
         return $result;
@@ -220,9 +231,9 @@ class Appointment_model extends CI_Model{
 
         $chckval = [];
         foreach($arr as $rw){
-            array_push($chckval, empty($rw['result_value']) ? 1 : 0); 
+            array_push($chckval, empty($rw['result_value']) ? is_numeric($rw['result_value']) ? 0 : 1 : 0); 
             $fields = array(
-                'result_value' => $rw['result_value']
+                'result_value' => strtoupper($rw['result_value'])
             );
             $this->db->update('appointment_lab_results', $fields, array('id' => $rw['id']));
         }
@@ -251,8 +262,165 @@ class Appointment_model extends CI_Model{
 
     public function cancel_lab_test($data){
         $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
         $this->db->trans_begin();
-        $this->db->update('appointment_lab_test', array('status'=>'C', 'cancel_reason' => strtoupper($post['cancel_reason'])), array('id' => $post['item_id']));
+        $fields = array(
+            'status'=>'C',
+            'cancel_reason' => strtoupper($post['cancel_reason']),
+            'cancelled_by' => $post['user_id'],
+            'cancelled_at' => $timestamp
+        );
+        $this->db->update('appointment_lab_test', $fields, array('id' => $post['item_id']));
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+
+    public function approved_reject_entry($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'approved' => $post['stat'] == 'approved' ? 'Y' : 'N', 
+            'approved_by' => $post['user_id'],
+            'approved_at' => $timestamp
+        );
+        $this->db->update('appointment_entries', $fields, array('id' => $post['item_id']));
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+
+    public function post_entry($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'status' => 'D', //POSTING VALUE
+            'posted_by' => $post['user_id'],
+            'posted_at' => $timestamp
+        );
+        $this->db->update('appointment_entries', $fields, array('id' => $post['id'], 'status' => 'P'));
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+
+    public function post_print_item($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'status' => 'D', //DONE VALUE AFTER PRINT
+            'printed_by' => $post['user_id'],
+            'printed_at' => $timestamp
+        );
+        $this->db->update('appointment_lab_test', $fields, array('id' => $post['item_id']));
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+    public function reprint_lab_test($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'status' => 'P', //REPRINT VALUE
+            'reprinted_by' => $post['user_id'],
+            'reprinted_at' => $timestamp
+        );
+        $this->db->update('appointment_lab_test', $fields, array('id' => $post['item_id']));
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+
+    public function cancel_entry($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'status' => 'C', //REPRINT VALUE
+            'cancelled_by' => $post['user_id'],
+            'cancelled_at' => $timestamp
+        );
+        $this->db->update('appointment_entries', $fields, array('id' => $post['id']));
+        $fields['cancel_reason'] = 'TRANSACTION CANCELLED (AUTO)';//auto cancel lab test
+        $this->db->update('appointment_lab_test', $fields, array('control_id' => $post['id']));
+
+        if($this->db->trans_status() === FALSE){
+            $this->db->trans_rollback();
+            $result = array(
+                'status' => false
+            );
+        }else{
+            $this->db->trans_commit();
+            $result = array(
+                'status' => true
+            );
+        }
+        return $result;
+    }
+
+    public function save_sendout($data){
+        $post = $data;
+        $timestamp = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $fields = array(
+            'status' => $post['status'] == '1' ? 'D' : '',
+            'so_clinic' => strtoupper($post['clinic']),
+            'so_remarks' => strtoupper($post['remarks']),
+            'so_status' => $post['status'],
+            'so_received_by' => $post['user_id'],
+            'so_received_at' => $post['status'] == '1' ? $timestamp : '0000-00-00 00:00:00'
+        );
+        $this->db->update('appointment_lab_test', $fields, array('id' => $post['id']));
+
         if($this->db->trans_status() === FALSE){
             $this->db->trans_rollback();
             $result = array(

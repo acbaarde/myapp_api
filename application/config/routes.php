@@ -61,3 +61,9 @@ $route['deleteUser'] = 'api/users/deleteUser';
 $route['updateUser'] = 'api/users/updateUser';
 
 $route['user/getUser'] = '/api/users/getUser';
+
+$route['auth/login'] = '/AuthController/login';
+$route['auth/token'] = '/AuthController/token';
+$route['auth/decode_token'] = '/AuthController/decode_token';
+
+$route['auth/view'] = '/AuthController/view';

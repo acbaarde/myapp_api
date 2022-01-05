@@ -39,7 +39,7 @@ class Timekeeping_model extends CI_Model{
 
         $this->db->query("drop temporary table if exists dtr");
         $temp_table = "create temporary table `dtr`
-        select employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,actual_amin,actual_amout,actual_pmin,actual_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min
+        select employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,cws_amin,cws_amout,cws_pmin,cws_pmout,actual_amin,actual_amout,actual_pmin,actual_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min
         from dtr_{$year} where employee_id = '".$employee['id']."' and `date` >= date('".$payperiod['cfrom']."') and `date` <= date('".$payperiod['cto']."')";
         $this->db->query($temp_table);
         $temp_table = $this->db->get('dtr')->result_array();
@@ -67,6 +67,10 @@ class Timekeeping_model extends CI_Model{
             
             foreach($temp_table as $temp_row){
                 if($temp_row['date'] == $nextdate){
+                    $cws_amin = $temp_row['cws_amin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['cws_amin'];
+                    $cws_amout = $temp_row['cws_amout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['cws_amout'];
+                    $cws_pmin = $temp_row['cws_pmin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['cws_pmin'];
+                    $cws_pmout = $temp_row['cws_pmout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['cws_pmout'];
                     $encoded_amin = $temp_row['encoded_amin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_amin'];
                     $encoded_amout = $temp_row['encoded_amout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_amout'];
                     $encoded_pmin = $temp_row['encoded_pmin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_pmin'];
@@ -94,6 +98,10 @@ class Timekeeping_model extends CI_Model{
                 $this->db->escape($sched_amout) .",". 
                 $this->db->escape($sched_pmin) .",". 
                 $this->db->escape($sched_pmout) .",". 
+                $this->db->escape(!empty($cws_amin) ? $cws_amin : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($cws_amout) ? $cws_amout : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($cws_pmin) ? $cws_pmin : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($cws_pmout) ? $cws_pmout : '0000-00-00 00:00:00') .",".
                 $this->db->escape(!empty($encoded_amin) ? $encoded_amin : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($encoded_amout) ? $encoded_amout : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($encoded_pmin) ? $encoded_pmin : '0000-00-00 00:00:00') .",". 
@@ -115,7 +123,7 @@ class Timekeeping_model extends CI_Model{
         $this->db->query($str);
 
         //insert dtr records
-        $dtr_insert = "insert into dtr_{$year} (employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min)VALUES";
+        $dtr_insert = "insert into dtr_{$year} (employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,cws_amin,cws_amout,cws_pmin,cws_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min)VALUES";
         $dtr_insert .= implode($dtr,",");
         $this->db->query($dtr_insert);
 
@@ -130,6 +138,10 @@ class Timekeeping_model extends CI_Model{
         time(sched_amout) as sched_amout,
         time(sched_pmin)as sched_pmin,
         time(sched_pmout)as sched_pmout,
+        if(time(cws_amin)='00:00:00','',time(cws_amin))as cws_amin,
+        if(time(cws_amout)='00:00:00','',time(cws_amout))as cws_amout,
+        if(time(cws_pmin)='00:00:00','',time(cws_pmin))as cws_pmin,
+        if(time(cws_pmout)='00:00:00','',time(cws_pmout))as cws_pmout,
         if(time(encoded_amin)='00:00:00','',time(encoded_amin))as encoded_amin,
         if(time(encoded_amout)='00:00:00','',time(encoded_amout))as encoded_amout,
         if(time(encoded_pmin)='00:00:00','',time(encoded_pmin))as encoded_pmin,
@@ -159,6 +171,10 @@ class Timekeeping_model extends CI_Model{
         foreach($dtr as $rw){
             
             $fields = array(
+                'cws_amin' => !empty($rw->cws_amin) ? $rw->date ." ". $rw->cws_amin . ":00" : "0000-00-00 00:00:00",
+                'cws_amout' => !empty($rw->cws_amout) ? $rw->date ." ". $rw->cws_amout . ":00" : "0000-00-00 00:00:00",
+                'cws_pmin' => !empty($rw->cws_pmin) ? $rw->date ." ". $rw->cws_pmin . ":00" : "0000-00-00 00:00:00",
+                'cws_pmout' => !empty($rw->cws_pmout) ? $rw->date ." ". $rw->cws_pmout . ":00" : "0000-00-00 00:00:00",
                 'encoded_amin' => !empty($rw->encoded_amin) ? $rw->date ." ". $rw->encoded_amin . ":00" : "0000-00-00 00:00:00",
                 'encoded_amout' => !empty($rw->encoded_amout) ? $rw->date ." ". $rw->encoded_amout . ":00" : "0000-00-00 00:00:00",
                 'encoded_pmin' => !empty($rw->encoded_pmin) ? $rw->date ." ". $rw->encoded_pmin . ":00" : "0000-00-00 00:00:00",
@@ -208,9 +224,9 @@ class Timekeeping_model extends CI_Model{
             $str = "update {$temp_dtr}
                 SET
                     am_lates = (case
-                    when encoded_amin > sched_amin
-                        then (hour(timediff(encoded_amin, sched_amin)) * 60) + (minute(timediff(encoded_amin, sched_amin)))
-                    when encoded_amin <= sched_amin
+                    when encoded_amin > if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin)
+                        then (hour(timediff(encoded_amin, if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin))) * 60) + (minute(timediff(encoded_amin, if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin))))
+                    when encoded_amin <= if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin)
                         then 0
                     WHEN (encoded_amin = '0000-00-00 00:00:00'
                     OR encoded_amout = '0000-00-00 00:00:00')
@@ -219,9 +235,9 @@ class Timekeeping_model extends CI_Model{
                     end
                     ),
                     pm_lates = (case
-                    when encoded_pmin > sched_pmin
-                        then (hour(timediff(encoded_pmin, sched_pmin)) * 60) + (minute(timediff(encoded_pmin, sched_pmin)))
-                    when encoded_pmin <= sched_pmin
+                    when encoded_pmin > if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin)
+                        then (hour(timediff(encoded_pmin, if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin))) * 60) + (minute(timediff(encoded_pmin, if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin))))
+                    when encoded_pmin <= if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin)
                         then 0
                     WHEN (encoded_pmin = '0000-00-00 00:00:00'
                     OR encoded_pmout = '0000-00-00 00:00:00')
@@ -230,16 +246,16 @@ class Timekeeping_model extends CI_Model{
                     end
                     ),
                     am_min = (case
-                    when encoded_amin >= sched_amin
-                    and encoded_amout >= sched_amout
-                        then (hour(timediff(encoded_amin, sched_amout)) * 60) + (minute(timediff(encoded_amin, sched_amout)))
+                    when encoded_amin >= if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin)
+                    and encoded_amout >= if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout)
+                        then (hour(timediff(encoded_amin, if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout))) * 60) + (minute(timediff(encoded_amin, if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout))))
                        
-                    when encoded_amin <= sched_amin
-                    and encoded_amout >= sched_amout
-                        then (hour(timediff(sched_amin, sched_amout)) * 60) + (minute(timediff(sched_amin, sched_amout)))
+                    when encoded_amin <= if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin)
+                    and encoded_amout >= if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout)
+                        then (hour(timediff(if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin), if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout))) * 60) + (minute(timediff(if(cws_amin!='0000-00-00 00:00:00',cws_amin,sched_amin), if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout))))
 
                     when encoded_amin != '0000-00-00 00:00:00'
-                    and encoded_amout < sched_amout
+                    and encoded_amout < if(cws_amout!='0000-00-00 00:00:00',cws_amout,sched_amout)
                         then 0
                     WHEN (encoded_amin = '0000-00-00 00:00:00'
                     OR encoded_amout = '0000-00-00 00:00:00')
@@ -248,16 +264,16 @@ class Timekeeping_model extends CI_Model{
                     end
                     ),
                     pm_min = (case
-                    when encoded_pmin <= sched_pmin
-                    and encoded_pmout >= sched_pmout
-                        then (hour(timediff(sched_pmout, sched_pmin)) * 60) + (minute(timediff(sched_pmout, sched_pmin)))
+                    when encoded_pmin <= if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin)
+                    and encoded_pmout >= if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout)
+                        then (hour(timediff(if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout), if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin))) * 60) + (minute(timediff(if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout), if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin))))
                         
-                    when encoded_pmin > sched_pmin
-                    and encoded_pmout >= sched_pmout
-                        then (hour(timediff(sched_pmout, encoded_pmin)) * 60) + (minute(timediff(sched_pmout, encoded_pmin)))
+                    when encoded_pmin > if(cws_pmin!='0000-00-00 00:00:00',cws_pmin,sched_pmin)
+                    and encoded_pmout >= if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout)
+                        then (hour(timediff(if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout), encoded_pmin)) * 60) + (minute(timediff(if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout), encoded_pmin)))
                         
                     when encoded_pmin != '0000-00-00 00:00:00'
-                    and encoded_pmout < sched_pmout
+                    and encoded_pmout < if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout)
                         then 0
                     
                     when (encoded_pmin = '0000-00-00 00:00:00'
@@ -267,8 +283,8 @@ class Timekeeping_model extends CI_Model{
                     end
                     ),
                     ot_min = (case
-                    when encoded_pmout >= sched_pmout
-                    and ot_start >= sched_pmout
+                    when encoded_pmout >= if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout)
+                    and ot_start >= if(cws_pmout!='0000-00-00 00:00:00',cws_pmout,sched_pmout)
                     and ot_end <= encoded_pmout
                         then (hour(timediff(ot_end, ot_start)) * 60) + (minute(timediff(ot_end, ot_start))) 
                     when (ot_start = '0000-00-00 00:00:00'
@@ -528,7 +544,7 @@ class Timekeeping_model extends CI_Model{
 
     public function deletesalaryadjustment($data=array()){
         $this->db->trans_start();
-        $post = $this->input->post();
+        $post = $data;
 
         $select_adj['table_name'] = 'salary_adjustments';
         $select_adj['filters'] = array('id' => $post['adjustment_id']);

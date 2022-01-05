@@ -29,7 +29,13 @@ class Appointment extends REST_Controller {
             aa.created_by,
             aa.created_at,
             aa.printed_by,
-            aa.printed_at
+            aa.printed_at,
+            aa.so_clinic,
+            aa.so_remarks,
+            aa.so_status,
+            aa.cancel_reason,
+            aa.cancelled_by,
+            aa.cancelled_at
         FROM
             appointment_lab_test AS aa
             LEFT JOIN laboratory_submodule AS bb ON bb.id = aa.lab_id
@@ -38,7 +44,8 @@ class Appointment extends REST_Controller {
         $results['submodule'] = $this->db->query($str)->result_array();
         echo json_encode($results);
     }
-    public function getEntries_get(){
+    public function getEntries_post(){
+        $post = $this->input->post();
         $str = "select
             aa.id,
             aa.status,
@@ -46,13 +53,19 @@ class Appointment extends REST_Controller {
             bb.lastname,
             bb.firstname,
             bb.middlename,
-            aa.created_at
+            aa.created_at,
+            aa.approved,
+            aa.discount_id,
+            if(aa.status = 'P',0,if(aa.status = 'D',1,''))as ordr
             FROM appointment_entries AS aa
             LEFT JOIN patients AS bb ON bb.id = aa.patient_id
             LEFT JOIN physicians AS cc ON cc.id = aa.physician_id
             LEFT JOIN dm_discount AS dd ON dd.id = aa.discount_id
-            order by id desc";
-        $results = $this->db->query($str)->result_array();
+            where (aa.id like '%".$post['search_value']."%' or aa.patient_id like '%".$post['search_value']."%' or bb.lastname like '%".$post['search_value']."%' or bb.firstname like '%".$post['search_value']."%' or bb.middlename like '%".$post['search_value']."%')
+            order by ordr,aa.created_at desc";
+        $entries = $str ." limit ".$post['limit']." offset ".$post['offset'];
+        $results['entries'] = $this->db->query($entries)->result_array();
+        $results['total'] = $this->db->query($str)->num_rows();
         echo json_encode($results);
     }
     public function getCtrlNo_get(){
@@ -86,6 +99,47 @@ class Appointment extends REST_Controller {
 
     public function cancelLabTest_post(){
         echo json_encode($this->appointmentmodel->cancel_lab_test($this->input->post()));
+    }
+    public function approvedRejectEntry_post(){
+        echo json_encode($this->appointmentmodel->approved_reject_entry($this->input->post()));
+    }
 
+    public function postEntry_post(){
+        echo json_encode($this->appointmentmodel->post_entry($this->input->post()));
+    }
+    public function checkPendingLabTest_post(){
+        $post = $this->input->post();
+        $lab_test = $this->db->get_where('appointment_lab_test', array('control_id' => $post['id'], 'status' => ''));
+        if($lab_test->num_rows() > 0){
+            $result = true;
+        }else{
+            $result = false;
+        }
+        echo json_encode($result);
+    }
+    public function checkPayment_post(){
+        $post = $this->input->post();
+        $entry = $this->db->get_where('appointment_entries', array('id' => $post['id'], 'status' => 'P'))->row_array();
+        if(intval($entry['cash']) >= intval($entry['total_amount'])){
+            $result = true;
+        }else{
+            $result = false;
+        }
+        echo json_encode($result);
+    }
+
+    public function postPrintItem_post(){
+        echo json_encode($this->appointmentmodel->post_print_item($this->input->post()));
+    }
+    public function reprintLabTest_post(){
+        echo json_encode($this->appointmentmodel->reprint_lab_test($this->input->post()));
+    }
+
+    public function cancelEntry_post(){
+        echo json_encode($this->appointmentmodel->cancel_entry($this->input->post()));
+    }
+    
+    public function saveSendout_post(){
+        echo json_encode($this->appointmentmodel->save_sendout($this->input->post()));
     }
 }

@@ -76,6 +76,8 @@ class Reports extends REST_Controller {
                     'total_rebates' => number_format(round(floatval($amnt) * 0.10,2),2),
                     'rebates' => $this->reportsmodel->rebates($post),
                     'breakdown' => $this->reportsmodel->rebates_brkdwn($post)
+                    // 'rebates' => $this->reportsmodel->rebates($post),
+                    // 'breakdown' => $this->reportsmodel->rebates_brkdwn($post)
                 ]);
             }
         }
@@ -97,42 +99,48 @@ class Reports extends REST_Controller {
     public function Sales_post(){
         $post = $this->input->post();
         $str = "select
+        aa.id as control_no,
         concat(bb.lastname,', ',bb.firstname,' ',bb.middlename)as fullname,
         bb.age,
         bb.agetype,
-        bb.gender,
+        ee.desc as gender,
         CONCAT(IF(cc.gender = 'f','Dra. ','Dr. '),cc.lastname,', ',cc.firstname,' ',cc.middlename)AS 'physician',
         cc.gender as physician_gender,
-        aa.discount_type,
-        aa.discount,
-        aa.payment,
-        aa.totalamount
-        from appointments as aa
+        dd.text as discount,
+        aa.discount_percent,
+        aa.cash,
+        aa.total_amount
+        from appointment_entries as aa
         left join patients bb on bb.id = aa.patient_id
         left join physicians cc on cc.id = aa.physician_id
+        left join dm_discount dd on dd.id = aa.discount_id
+        left join dm_gender ee on ee.id = bb.gender
         where date(aa.created_at) = date('".$post['date']."')
-        and approved = 'Y'
+        and approved != 'N'
         order by aa.created_at";
         $result = $this->db->query($str);
 
         $sum = "select
-        sum(totalamount)as totalamount
-        from appointments
+        sum(total_amount)as total_amount,
+        sum(cash) as cash
+        from appointment_entries
         where date(created_at) = date('".$post['date']."')
-        and approved = 'Y'";
-        $sum = $this->db->query($sum)->row_array()['totalamount'];
+        and approved != 'N'";
+        $sum = $this->db->query($sum)->row_array();
 
         if($result->num_rows() > 0){
             $result = array(
                 'status' => true,
                 'results' => $result->result_array(),
-                'total_amount' => $sum
+                'total_amount' => $sum['total_amount'],
+                'total_cash' => $sum['cash']
             );
         }else{
             $result = array(
                 'status' => false,
                 'results' => [],
-                'total_amount' => 0
+                'total_amount' => 0,
+                'total_cash' => 0
             );
         }
 

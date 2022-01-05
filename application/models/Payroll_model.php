@@ -16,7 +16,7 @@ class Payroll_model extends CI_Model{
             bb.net,
             bb.adjustments
             from mhr_{$year} as aa
-            left join salary_adjustments as bb on bb.employee_id = aa.employee_id
+            left join salary_adjustments as bb on bb.employee_id = aa.employee_id and bb.payperiod = aa.payperiod
             where aa.payperiod = '".$payperiod['pperiod']."'";
         $mhr = $this->db->query($str)->result_array();
 

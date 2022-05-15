@@ -34,12 +34,13 @@ class Appointment extends REST_Controller {
             aa.so_remarks,
             aa.so_status,
             aa.cancel_reason,
-            aa.cancelled_by,
+            concat(aa.cancelled_by," => ",dd.fullname) as cancelled_by,
             aa.cancelled_at
         FROM
             appointment_lab_test AS aa
             LEFT JOIN laboratory_submodule AS bb ON bb.id = aa.lab_id
             LEFT JOIN laboratory_module AS cc ON cc.id = bb.mod_id
+            LEFT JOIN users as dd on dd.user_id = aa.cancelled_by
         WHERE control_id = "'.$post['id'].'" ';
         $results['submodule'] = $this->db->query($str)->result_array();
         echo json_encode($results);

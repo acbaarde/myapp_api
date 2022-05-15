@@ -75,6 +75,10 @@ class Timekeeping_model extends CI_Model{
                     $encoded_amout = $temp_row['encoded_amout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_amout'];
                     $encoded_pmin = $temp_row['encoded_pmin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_pmin'];
                     $encoded_pmout = $temp_row['encoded_pmout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['encoded_pmout'];
+                    $actual_amin = $temp_row['actual_amin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['actual_amin'];
+                    $actual_amout = $temp_row['actual_amout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['actual_amout'];
+                    $actual_pmin = $temp_row['actual_pmin'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['actual_pmin'];
+                    $actual_pmout = $temp_row['actual_pmout'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['actual_pmout'];
                     $ot_start = $temp_row['ot_start'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ot_start'];
                     $ot_end = $temp_row['ot_end'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ot_end'];
                     $ut_start = $temp_row['ut_start'] == '0000-00-00 00:00:00' ? '0000-00-00 00:00:00' : $temp_row['ut_start'];
@@ -106,6 +110,10 @@ class Timekeeping_model extends CI_Model{
                 $this->db->escape(!empty($encoded_amout) ? $encoded_amout : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($encoded_pmin) ? $encoded_pmin : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($encoded_pmout) ? $encoded_pmout : '0000-00-00 00:00:00') .",".
+                $this->db->escape(!empty($actual_amin) ? $actual_amin : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($actual_amout) ? $actual_amout : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($actual_pmin) ? $actual_pmin : '0000-00-00 00:00:00') .",". 
+                $this->db->escape(!empty($actual_pmout) ? $actual_pmout : '0000-00-00 00:00:00') .",".
                 $this->db->escape(!empty($ot_start) ? $ot_start : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($ot_end) ? $ot_end : '0000-00-00 00:00:00') .",". 
                 $this->db->escape(!empty($ut_start) ? $ut_start : '0000-00-00 00:00:00') .",". 
@@ -123,7 +131,7 @@ class Timekeeping_model extends CI_Model{
         $this->db->query($str);
 
         //insert dtr records
-        $dtr_insert = "insert into dtr_{$year} (employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,cws_amin,cws_amout,cws_pmin,cws_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min)VALUES";
+        $dtr_insert = "insert into dtr_{$year} (employee_id,`date`,`day`,`type`,ws_code,sched_amin,sched_amout,sched_pmin,sched_pmout,cws_amin,cws_amout,cws_pmin,cws_pmout,encoded_amin,encoded_amout,encoded_pmin,encoded_pmout,actual_amin,actual_amout,actual_pmin,actual_pmout,ot_start,ot_end,ut_start,ut_end,am_lates,pm_lates,am_min,pm_min,ot_min,ut_min)VALUES";
         $dtr_insert .= implode($dtr,",");
         $this->db->query($dtr_insert);
 
@@ -146,6 +154,10 @@ class Timekeeping_model extends CI_Model{
         if(time(encoded_amout)='00:00:00','',time(encoded_amout))as encoded_amout,
         if(time(encoded_pmin)='00:00:00','',time(encoded_pmin))as encoded_pmin,
         if(time(encoded_pmout)='00:00:00','',time(encoded_pmout))as encoded_pmout,
+        if(time(actual_amin)='00:00:00','',time(actual_amin))as actual_amin,
+        if(time(actual_amout)='00:00:00','',time(actual_amout))as actual_amout,
+        if(time(actual_pmin)='00:00:00','',time(actual_pmin))as actual_pmin,
+        if(time(actual_pmout)='00:00:00','',time(actual_pmout))as actual_pmout,
         if(time(ot_start)='00:00:00','',time(ot_start))as ot_start,
         if(time(ot_end)='00:00:00','',time(ot_end))as ot_end,
         if(time(ut_start)='00:00:00','',time(ut_start))as ut_start,
@@ -179,6 +191,10 @@ class Timekeeping_model extends CI_Model{
                 'encoded_amout' => !empty($rw->encoded_amout) ? $rw->date ." ". $rw->encoded_amout . ":00" : "0000-00-00 00:00:00",
                 'encoded_pmin' => !empty($rw->encoded_pmin) ? $rw->date ." ". $rw->encoded_pmin . ":00" : "0000-00-00 00:00:00",
                 'encoded_pmout' => !empty($rw->encoded_pmout) ? $rw->date ." ". $rw->encoded_pmout . ":00" : "0000-00-00 00:00:00",
+                'actual_amin' => !empty($rw->encoded_amin) ? $rw->date ." ". $rw->encoded_amin . ":00" : "actual_amin",
+                'actual_amout' => !empty($rw->encoded_amout) ? $rw->date ." ". $rw->encoded_amout . ":00" : "actual_amout",
+                'actual_pmin' => !empty($rw->encoded_pmin) ? $rw->date ." ". $rw->encoded_pmin . ":00" : "actual_pmin",
+                'actual_pmout' => !empty($rw->encoded_pmout) ? $rw->date ." ". $rw->encoded_pmout . ":00" : "actual_pmout",
                 'ot_start' => !empty($rw->ot_start) ? $rw->date ." ". $rw->ot_start . ":00" : "0000-00-00 00:00:00",
                 'ot_end' => !empty($rw->ot_end) ? $rw->date ." ". $rw->ot_end . ":00" : "0000-00-00 00:00:00",
                 'ut_start' => !empty($rw->ut_start) ? $rw->date ." ". $rw->ut_start . ":00" : "0000-00-00 00:00:00",

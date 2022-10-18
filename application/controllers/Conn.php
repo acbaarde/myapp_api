@@ -9,6 +9,7 @@ class Conn extends REST_Controller {
     }
 
     public function index_get(){
-        echo json_encode('Connected!');
+        $this->load->view('testpage');
+        // echo json_encode('Connected!');
     }
 }

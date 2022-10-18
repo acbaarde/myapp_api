@@ -63,19 +63,21 @@ class Appointment extends REST_Controller {
             LEFT JOIN physicians AS cc ON cc.id = aa.physician_id
             LEFT JOIN dm_discount AS dd ON dd.id = aa.discount_id
             where (aa.id like '%".$post['search_value']."%' or aa.patient_id like '%".$post['search_value']."%' or bb.lastname like '%".$post['search_value']."%' or bb.firstname like '%".$post['search_value']."%' or bb.middlename like '%".$post['search_value']."%')
-            order by ordr,aa.created_at desc";
+            order by aa.id desc";
         $entries = $str ." limit ".$post['limit']." offset ".$post['offset'];
         $results['entries'] = $this->db->query($entries)->result_array();
         $results['total'] = $this->db->query($str)->num_rows();
         echo json_encode($results);
     }
     public function getCtrlNo_get(){
-        $str = "select (id + 1)as control_no from appointment_entries order by id desc limit 1";
+        $date = date("Ym");
+        $str = "select (id + 1)as control_no from appointment_entries where substr(id,1,6) = '{$date}' order by id desc limit 1";
+        // $str = "select (id + 1)as control_no from appointment_entries order by id desc limit 1";
         $result = $this->db->query($str);
         if($result->num_rows() > 0){
             $result = $result->row_array();
         }else{
-            $result = array('control_no' => 1);
+            $result = array('control_no' => $date . '0001');
         }
         echo json_encode($result);
     }

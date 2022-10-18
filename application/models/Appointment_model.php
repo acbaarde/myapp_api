@@ -3,6 +3,7 @@
 class Appointment_model extends CI_Model{
     public function insert_entry($data){
         $post = $data;
+        $id = $post['id'];
         $timestamp = date('Y-m-d H:i:s');
         $patient_id = $post['patient_id'];
         $physician_id = $post['physician_id'];
@@ -17,6 +18,7 @@ class Appointment_model extends CI_Model{
         $user_id = $post['user_id'];
 
         $fields = array(
+            'id' => $id,
             'status' => 'P',
             'patient_id' => $patient_id,
             'physician_id' => $physician_id,
@@ -38,7 +40,7 @@ class Appointment_model extends CI_Model{
         foreach($submod_id as $rw){
             $lab = $this->db->get_where('laboratory_submodule', array('id' => $rw))->row_array();
             $fields = array(
-                'control_id' => $insertid,
+                'control_id' => $id,
                 'lab_id' => $lab['id'],
                 'title' => $lab['title'],
                 'abbr' => $lab['abbr'],
@@ -51,7 +53,7 @@ class Appointment_model extends CI_Model{
             $sub_fields = [];
             foreach($lab_subs as $rw_sub){
                 $sub_field = array(
-                    'control_id' => $insertid,
+                    'control_id' => $id,
                     'lab_id' => $rw_sub['submod_id'],
                     'result_title' => $rw_sub['title'],
                     'result_range' => $rw_sub['result_range']
@@ -73,8 +75,8 @@ class Appointment_model extends CI_Model{
             $result = array(
                 'status' => true,
                 'appointment_status' => 'P',
-                'control_id' => $insertid,
-                'apprvd' => $this->db->get_where('appointment_entries', array('id' => $insertid))->row_array()['approved']
+                'control_id' => $id,
+                'apprvd' => $this->db->get_where('appointment_entries', array('id' => $id))->row_array()['approved']
             );
         }
         return $result;

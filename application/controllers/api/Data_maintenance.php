@@ -127,7 +127,7 @@ class Data_maintenance extends REST_Controller {
         cc.middlename,
         aa.title,
         aa.abbr,
-        'COMPLETE' as 'status'
+        'FOR PRINTING' as `status`
         FROM appointment_lab_test AS aa
         LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
         LEFT JOIN patients AS cc ON cc.id = bb.patient_id
@@ -159,7 +159,7 @@ class Data_maintenance extends REST_Controller {
     public function getAppointments_get(){
         $post = $this->input->post();
         $timestamp = date("Y-m-d");
-        $str = "select * from appointment_view where date(created_at) = '".$timestamp."' order by created_at";
+        $str = "select * from appointment_view where date(created_at) = '".$timestamp."' order by created_at desc";
         $results['all'] = $this->db->query($str)->result_array();
         $results['for_released'] = $this->getforreleased();
         echo json_encode($results);

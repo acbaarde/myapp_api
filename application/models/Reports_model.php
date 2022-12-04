@@ -192,10 +192,9 @@ class Reports_model extends CI_Model{
         $payperiod = $this->db->get_where('dm_pp'.$post['year'], array('id' => $post['payperiod_id']))->row_array();
         $str = "select
         aa.*,
-        bb.*,
+        bb.firstname,bb.lastname,bb.middlename,bb.position,
         cc.*,
-        dd.id AS `adjustment_id`,
-        dd.adjustments AS total_adjustments
+        dd.id AS `adjustment_id`
         FROM payslip_".$post['year']." AS aa
         LEFT JOIN employee_view AS bb ON bb.id = aa.employee_id
         LEFT JOIN mhr_".$post['year']." AS cc ON cc.employee_id = aa.employee_id AND cc.payperiod = aa.payperiod
@@ -221,16 +220,26 @@ class Reports_model extends CI_Model{
                     'reg_ot_pay' => round($sal_per_hr * floatval($row['regular_ot']),2),
                     'gross' => $row['gross'],
                     'net' => $row['net'],
-                    'total_adjustments' => $row['total_adjustments'],
-                    'deductions' => []
+                    'total_earnings' => $row['additions'],
+                    'total_deductions' => $row['deductions'],
+                    'deductions' => [],
+                    'earnings' => []
                 ]);
 
                 $adjustments = $this->db->get_where('salary_adjustments_breakdown', array('adjustment_id' => $row['adjustment_id']))->result_array();
                 foreach($adjustments as $adj_row){
-                    array_push($results[$k]['deductions'], [
-                        'description' => $adj_row['description'],
-                        'amount' => $adj_row['amount']
-                    ]);
+                    if($adj_row['adjustment_code'] == 'A'){
+                        array_push($results[$k]['earnings'], [
+                            'description' => $adj_row['description'],
+                            'amount' => $adj_row['amount']
+                        ]);
+                    }
+                    if($adj_row['adjustment_code'] == 'D'){
+                        array_push($results[$k]['deductions'], [
+                            'description' => $adj_row['description'],
+                            'amount' => $adj_row['amount']
+                        ]);
+                    }
                 }
             }
 

@@ -8,6 +8,8 @@ class Appointment extends REST_Controller {
        parent::__construct();
        $this->load->model('Appointment_model', 'appointmentmodel');
        $this->load->model('Mylib', 'mylib');
+       $this->load->library('Pdf');
+       $this->load->helper('url');
     }
     public function getEntry_post(){
         $post = $this->input->post();
@@ -144,5 +146,24 @@ class Appointment extends REST_Controller {
     
     public function saveSendout_post(){
         echo json_encode($this->appointmentmodel->save_sendout($this->input->post()));
+    }
+    public function printLabTest_post(){
+        $user = json_decode($this->input->post('user'));
+        $query = $this->db->query("SELECT CONCAT(firstname,' ',UCASE(LEFT(middlename,1)),'. ',lastname ,', ',IF(position_id=1,'RMT','')) AS rmt FROM employees WHERE id = '{$user->id}'");
+        $data['user_name'] = $query->num_rows() > 0 ? $query->row_array()['rmt'] : $user->name;
+        $data['patient'] = json_decode($this->input->post('patient_info'));
+        $data['results'] = json_decode($this->input->post('results'));
+        $data['header'] = $this->db->get('dm_company_info')->row_array();
+
+        //print posting
+        $post['user_id'] = $user->id;
+        $post['item_id'] = $this->input->post('item_id');
+        $this->appointmentmodel->post_print_item($post);
+
+        $this->load->view('reports/laboratory', $data);
+    }   
+
+    public function getAllPending_get(){
+        echo json_encode($this->db->get_where('appointment_view', array('status' => 'P'))->result());
     }
 }

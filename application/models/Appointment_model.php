@@ -350,6 +350,8 @@ class Appointment_model extends CI_Model{
             $result = array(
                 'status' => false
             );
+            echo "Error print posting!!!";
+            die();
         }else{
             $this->db->trans_commit();
             $result = array(

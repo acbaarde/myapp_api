@@ -16,7 +16,7 @@ class Reports extends REST_Controller {
     }
 
     public function getYear_get(){
-        $str = "SELECT `year` AS id, `year` AS `desc` FROM `year`";
+        $str = "SELECT `year` AS id, `year` AS `desc` FROM `year` ORDER BY id DESC";
         echo json_encode($this->db->query($str)->result_array());
     }
 

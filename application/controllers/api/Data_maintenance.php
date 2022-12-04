@@ -116,6 +116,13 @@ class Data_maintenance extends REST_Controller {
         $results['released'] = $this->appointment_count('released');
         $results['for_approval'] = $this->appointment_count('for_approval');
         $results['all'] = $this->appointment_count('all');
+        $results['all_patient'] = $this->appointment_count('all_patient');
+        $results['all_pending'] = $this->appointment_count('all_pending');
+        $results['all_cancelled'] = $this->appointment_count('all_cancelled');
+        $results['completed'] = $this->appointment_count('completed');
+        $results['cash'] = $this->appointment_count('cash');
+        $results['change'] = $this->appointment_count('change');
+        $results['total_cash'] = $this->appointment_count('total_cash');
         echo json_encode($results);
     }
     function getforreleased(){
@@ -125,14 +132,16 @@ class Data_maintenance extends REST_Controller {
         cc.lastname,
         cc.firstname,
         cc.middlename,
-        aa.title,
+        IF(ee.send_out=1,CONCAT(aa.title,' (SEND OUT)'),aa.title) AS `title`,
         aa.abbr,
-        'FOR PRINTING' as `status`
+        IF(aa.status='D','DONE','FOR PRINTING') `status`
         FROM appointment_lab_test AS aa
         LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
         LEFT JOIN patients AS cc ON cc.id = bb.patient_id
+        LEFT JOIN laboratory_submodule AS dd ON dd.id = aa.lab_id
+        LEFT JOIN laboratory_module AS ee ON ee.id = dd.mod_id
         WHERE DATE(aa.created_at) = date('{$today}')
-        AND aa.`status` = 'P'
+        AND aa.`status` IN ('D','P')/*D=Done,P=Printing*/
         AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')
         ORDER BY aa.control_id,bb.patient_id";
         return $this->db->query($str)->result_array();
@@ -145,10 +154,24 @@ class Data_maintenance extends REST_Controller {
             $str = "select count(aa.id)as cnt FROM appointment_lab_test AS aa
             LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
             WHERE DATE(aa.created_at) = date('{$today}') 
-            AND aa.`status` = 'P'
+            AND aa.`status` IN ('D','P')
             AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')";
         }elseif($status == 'for_approval'){
             $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P' and discount_id = 3";
+        }elseif($status == 'all_patient'){
+            $str = "SELECT COUNT(id) AS cnt FROM patients";
+        }elseif($status == 'all_pending'){
+            $str = "select count(id)as cnt from appointment_entries where SUBSTR(created_at,1,7) = SUBSTR('{$today}',1,7) and `status` = 'P'";
+        }elseif($status == 'all_cancelled'){
+            $str = "select count(id)as cnt from appointment_entries where SUBSTR(created_at,1,7) = SUBSTR('{$today}',1,7) and `status` = 'C'";
+        }elseif($status == 'completed'){
+            $str = "select count(id)as cnt from appointment_entries where SUBSTR(created_at,1,7) = SUBSTR('{$today}',1,7) and `status` = 'D'";
+        }elseif($status == 'cash'){
+            $str = "SELECT ifnull(SUM(cash),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
+        }elseif($status == 'change'){
+            $str = "SELECT ifnull(SUM(balance),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
+        }elseif($status == 'total_cash'){
+            $str = "SELECT ifnull(SUM(total_amount),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
         }else{
             //ALL
             $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}')";

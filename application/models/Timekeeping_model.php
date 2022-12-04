@@ -387,10 +387,10 @@ class Timekeeping_model extends CI_Model{
 
                 if($adjstmnts->num_rows() > 0){
                     $adjstmnts = $adjstmnts->row_array();
-                    $fields['net'] = round($gross - floatval($adjstmnts['adjustments']),2);
+                    // $fields['net'] = round(($gross + floatval($adjstmnts['earnings']))  - floatval($adjstmnts['deductions']),2);
                     $this->db->update('salary_adjustments', $fields, array('id' => $adjstmnts['id']));
                 }else{
-                    $fields['net'] = round($gross,2);
+                    // $fields['net'] = round($gross,2);
                     $this->db->insert('salary_adjustments', $fields);
                 }
             }
@@ -447,13 +447,13 @@ class Timekeeping_model extends CI_Model{
     public function salary_adjustments($id){
         $payperiod = $this->mylib->get_active_pp()->row_array();
         $year = $this->mylib->get_active_yr();
-        $str = "select aa.*,bb.regular FROM salary_adjustments aa
+        $str = "select aa.*,bb.regular FROM salary_adjustments_view aa
         LEFT JOIN mhr_{$year} bb ON bb.employee_id = aa.employee_id AND bb.payperiod = aa.payperiod
         WHERE aa.employee_id = '{$id}' AND DATE(aa.payperiod) = DATE('".$payperiod['pperiod']."')";
         return $this->db->query($str);
     }
     public function salary_adjustments_breakdown($id){
-        $str = "select * from salary_adjustments_breakdown where adjustment_id = '{$id}'";
+        $str = "select * from salary_adjustments_breakdown_view where adjustment_id = '{$id}'";
         return $this->db->query($str);
     }
 
@@ -467,26 +467,34 @@ class Timekeeping_model extends CI_Model{
         $insert['fields'] = array(
             'adjustment_id' => $post['adjustment_id'],
             'description' => strtoupper($post['description']),
+            'adjustment_code' => $post['adjustment_code'],
+            'remarks' => is_null($post['remarks']) ? '' : $post['remarks'],
             'amount' => $post['amount'],
             'created_by' => $post['user_id'],
             'created_at' => $timestamp
         );
         $insert = $this->builder->create_insert($insert);
 
-        $select['table_name'] = 'salary_adjustments';
-        $select['filters'] = array('id' => $post['adjustment_id']);
-        $select = $this->builder->create_select($select)['result']->row_array();
+        // $select['table_name'] = 'salary_adjustments';
+        // $select['filters'] = array('id' => $post['adjustment_id']);
+        // $select = $this->builder->create_select($select)['result']->row_array();
         
-        $net = floatval($select['net']) - floatval($post['amount']);
-        $adjustments = floatval($select['adjustments']) + floatval($post['amount']);
 
-        $update['table_name'] = 'salary_adjustments';
-        $update['fields'] = array(
-            'net' => round($net,2),
-            'adjustments' => round($adjustments,2)
-        );
-        $update['filters'] = array('id' => $post['adjustment_id']);
-        $update = $this->builder->create_update($update);
+        // $net = $post['adjustment_code'] == 'A' ? floatval($select['net']) + floatval($post['amount']) : floatval($select['net']) - floatval($post['amount']);
+        // $adjustments = floatval($select['adjustments']) + floatval($post['amount']);
+
+        // $earnings = floatval($select['earnings']) + ($post['adjustment_code'] == 'A' ? floatval($post['amount']) : 0);
+        // $deductions = floatval($select['deductions']) + ($post['adjustment_code'] == 'D' ? floatval($post['amount']) : 0);
+
+        // $update['table_name'] = 'salary_adjustments';
+        // $update['fields'] = array(
+            // 'net' => round($net,2),
+            // 'adjustments' => round($adjustments,2),
+            // 'earnings' => round($earnings,2),
+            // 'deductions' => round($deductions,2)
+        // );
+        // $update['filters'] = array('id' => $post['adjustment_id']);
+        // $update = $this->builder->create_update($update);
 
         if($this->db->trans_status() === false){
             $this->db->trans_rollback();
@@ -509,9 +517,9 @@ class Timekeeping_model extends CI_Model{
         $payperiod = $this->mylib->get_active_pp()->row_array();
         $timestamp = date('Y-m-d H:i:s');
 
-        $select_adj['table_name'] = 'salary_adjustments';
-        $select_adj['filters'] = array('id' => $post['adjustment_id']);
-        $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
+        // $select_adj['table_name'] = 'salary_adjustments';
+        // $select_adj['filters'] = array('id' => $post['adjustment_id']);
+        // $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
 
         $select_brkdwn['table_name'] = 'salary_adjustments_breakdown';
         $select_brkdwn['filters'] = array('id' => $post['id']);
@@ -521,6 +529,8 @@ class Timekeeping_model extends CI_Model{
         $update['fields'] = array(
             'adjustment_id' => $post['adjustment_id'],
             'description' => strtoupper($post['description']),
+            'adjustment_code' => $post['adjustment_code'],
+            'remarks' => is_null($post['remarks']) ? '' : $post['remarks'],
             'amount' => $post['amount'],
             'updated_by' => $post['user_id'],
             'updated_at' => $timestamp
@@ -528,19 +538,26 @@ class Timekeeping_model extends CI_Model{
         $update['filters'] = array('id' => $post['id']);
         $update = $this->builder->create_update($update);
         //old value
-        $net = floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
-        $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
-        //updated value
-        $net = floatval($net) - floatval($post['amount']);
-        $adjustments = floatval($adjustments) + floatval($post['amount']);
+        // $net = $select_brkdwn['adjustment_code'] == 'A' ? floatval($select_adj['net']) - floatval($select_brkdwn['amount']) : floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
+        // $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
+        // $earnings = $select_brkdwn['adjustment_code'] == 'A' ? floatval($select_adj['earnings']) - floatval($select_brkdwn['amount']) : floatval($select_adj['earnings']);
+        // $deductions = $select_brkdwn['adjustment_code'] == 'D' ? floatval($select_adj['deductions']) - floatval($select_brkdwn['amount']) : floatval($select_adj['deductions']);
 
-        $update['table_name'] = 'salary_adjustments';
-        $update['fields'] = array(
-            'net' => round($net,2),
-            'adjustments' => round($adjustments,2)
-        );
-        $update['filters'] = array('id' => $post['adjustment_id']);
-        $update = $this->builder->create_update($update);
+        //updated value
+        // $net = $post['adjustment_code'] == 'A' ? floatval($net) + floatval($post['amount']) : floatval($net) - floatval($post['amount']);
+        // $adjustments = floatval($adjustments) + floatval($post['amount']);
+        // $earnings = $post['adjustment_code'] == 'A' ? floatval($earnings) + floatval($post['amount']) : floatval($earnings);
+        // $deductions = $post['adjustment_code'] == 'D' ? floatval($deductions) + floatval($post['amount']) : floatval($deductions);
+
+        // $update['table_name'] = 'salary_adjustments';
+        // $update['fields'] = array(
+            // 'net' => round($net,2),
+            // 'adjustments' => round($adjustments,2),
+            // 'earnings' => round($earnings,2),
+            // 'deductions' => round($deductions,2)
+        // );
+        // $update['filters'] = array('id' => $post['adjustment_id']);
+        // $update = $this->builder->create_update($update);
 
         if($this->db->trans_status() === false){
             $this->db->trans_rollback();
@@ -562,25 +579,29 @@ class Timekeeping_model extends CI_Model{
         $this->db->trans_start();
         $post = $data;
 
-        $select_adj['table_name'] = 'salary_adjustments';
-        $select_adj['filters'] = array('id' => $post['adjustment_id']);
-        $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
+        // $select_adj['table_name'] = 'salary_adjustments';
+        // $select_adj['filters'] = array('id' => $post['adjustment_id']);
+        // $select_adj = $this->builder->create_select($select_adj)['result']->row_array();
 
-        $select_brkdwn['table_name'] = 'salary_adjustments_breakdown';
-        $select_brkdwn['filters'] = array('id' => $post['id']);
-        $select_brkdwn = $this->builder->create_select($select_brkdwn)['result']->row_array();
+        // $select_brkdwn['table_name'] = 'salary_adjustments_breakdown';
+        // $select_brkdwn['filters'] = array('id' => $post['id']);
+        // $select_brkdwn = $this->builder->create_select($select_brkdwn)['result']->row_array();
 
         //old value
-        $net = floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
-        $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
+        // $net = $select_brkdwn['adjustment_code'] == 'A' ? floatval($select_adj['net']) - floatval($select_brkdwn['amount']) : floatval($select_adj['net']) + floatval($select_brkdwn['amount']);
+        // $adjustments = floatval($select_adj['adjustments']) - floatval($select_brkdwn['amount']);
+        // $earnings = $select_brkdwn['adjustment_code'] == 'A' ? floatval($select_adj['earnings']) - floatval($select_brkdwn['amount']) : floatval($select_adj['earnings']);
+        // $deductions = $select_brkdwn['adjustment_code'] == 'D' ? floatval($select_adj['deductions']) - floatval($select_brkdwn['amount']) : floatval($select_adj['deductions']);
 
-        $update['table_name'] = 'salary_adjustments';
-        $update['fields'] = array(
-            'net' => round($net,2),
-            'adjustments' => round($adjustments,2)
-        );
-        $update['filters'] = array('id' => $post['adjustment_id']);
-        $update = $this->builder->create_update($update);
+        // $update['table_name'] = 'salary_adjustments';
+        // $update['fields'] = array(
+            // 'net' => round($net,2),
+            // 'adjustments' => round($adjustments,2),
+            // 'earnings' => round($earnings,2),
+            // 'deductions' => round($deductions,2)
+        // );
+        // $update['filters'] = array('id' => $post['adjustment_id']);
+        // $update = $this->builder->create_update($update);
 
         $this->db->delete('salary_adjustments_breakdown', array('id' => $post['id']));
 

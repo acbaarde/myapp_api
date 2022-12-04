@@ -14,9 +14,10 @@ class Payroll_model extends CI_Model{
             bb.salary,
             bb.gross,
             bb.net,
-            bb.adjustments
+            bb.earnings,
+            bb.deductions
             from mhr_{$year} as aa
-            left join salary_adjustments as bb on bb.employee_id = aa.employee_id and bb.payperiod = aa.payperiod
+            left join salary_adjustments_view as bb on bb.employee_id = aa.employee_id and bb.payperiod = aa.payperiod
             where aa.payperiod = '".$payperiod['pperiod']."'";
         $mhr = $this->db->query($str)->result_array();
 
@@ -27,7 +28,7 @@ class Payroll_model extends CI_Model{
                 $str = "delete from payslip_{$year} where payperiod = '".$payperiod['pperiod']."' ";
                 $this->db->query($str);
 
-                $insert = "insert into payslip_{$year} (employee_id,payperiod,salary,gross,net,deduction)VALUES";
+                $insert = "insert into payslip_{$year} (employee_id,payperiod,salary,gross,net,additions,deductions)VALUES";
                 $fields = [];
                 foreach($mhr as $rw){
                     array_push($fields, "(".
@@ -36,7 +37,8 @@ class Payroll_model extends CI_Model{
                         $this->db->escape($rw['salary']) . "," .
                         $this->db->escape($rw['gross']) . "," .
                         $this->db->escape($rw['net']) . "," .
-                        $this->db->escape($rw['adjustments']) .")"
+                        $this->db->escape($rw['earnings']) . "," .
+                        $this->db->escape($rw['deductions']) .")"
                     );
                 }
                 //to check if no manhour to process

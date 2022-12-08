@@ -112,10 +112,10 @@ class Data_maintenance extends REST_Controller {
             }
         }
         $results['submod'] = $new_submod;
-        $results['pending'] = $this->appointment_count('pending');
-        $results['released'] = $this->appointment_count('released');
-        $results['for_approval'] = $this->appointment_count('for_approval');
-        $results['all'] = $this->appointment_count('all');
+        // $results['pending'] = $this->appointment_count('pending');
+        // $results['released'] = $this->appointment_count('released');
+        // $results['for_approval'] = $this->appointment_count('for_approval');
+        // $results['all'] = $this->appointment_count('all');
         $results['all_patient'] = $this->appointment_count('all_patient');
         $results['all_pending'] = $this->appointment_count('all_pending');
         $results['all_cancelled'] = $this->appointment_count('all_cancelled');
@@ -148,17 +148,19 @@ class Data_maintenance extends REST_Controller {
     }
     function appointment_count($status){
         $today = date("Y-m-d");
-        if($status == 'pending'){
-            $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P'";
-        }elseif($status == 'released'){
-            $str = "select count(aa.id)as cnt FROM appointment_lab_test AS aa
-            LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
-            WHERE DATE(aa.created_at) = date('{$today}') 
-            AND aa.`status` IN ('D','P')
-            AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')";
-        }elseif($status == 'for_approval'){
-            $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P' and discount_id = 3";
-        }elseif($status == 'all_patient'){
+        // if($status == 'pending'){
+        //     $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P'";
+        // }elseif($status == 'released'){
+        //     $str = "select count(aa.id)as cnt FROM appointment_lab_test AS aa
+        //     LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
+        //     WHERE DATE(aa.created_at) = date('{$today}') 
+        //     AND aa.`status` IN ('D','P')
+        //     AND IF(bb.discount_id = 3, bb.approved = 'Y', bb.approved = '')";
+        // }elseif($status == 'for_approval'){
+        //     $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}') and `status` = 'P' and discount_id = 3";
+        // }
+        
+        if($status == 'all_patient'){
             $str = "SELECT COUNT(id) AS cnt FROM patients";
         }elseif($status == 'all_pending'){
             $str = "select count(id)as cnt from appointment_entries where SUBSTR(created_at,1,7) = SUBSTR('{$today}',1,7) and `status` = 'P'";
@@ -185,6 +187,7 @@ class Data_maintenance extends REST_Controller {
         $str = "select * from appointment_view where date(created_at) = '".$timestamp."' order by created_at desc";
         $results['all'] = $this->db->query($str)->result_array();
         $results['for_released'] = $this->getforreleased();
+        $results['for_sendout'] = $this->db->get('appointment_sendout_view')->result_array();
         echo json_encode($results);
     }
 

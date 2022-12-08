@@ -99,7 +99,7 @@ class Reports extends REST_Controller {
     public function Sales_post(){
         $post = $this->input->post();
         $str = "select
-        aa.id as control_no,
+        aa.id as control_id,
         concat(bb.lastname,', ',bb.firstname,' ',bb.middlename)as fullname,
         bb.age,
         bb.agetype,
@@ -148,5 +148,42 @@ class Reports extends REST_Controller {
     }
     public function Payslip_post(){
         echo json_encode($this->reportsmodel->payslip($this->input->post()));
+    }
+
+    public function Sendout_post(){
+        $post = $this->input->post();
+        $str = "SELECT aa.control_id,
+        bb.patient_id,
+        concat(cc.lastname,', ',cc.firstname,' ',cc.middlename)as fullname,
+        IF(ee.send_out=1,CONCAT(aa.title,' (SEND OUT)'),aa.title) AS `title`,
+        aa.amount,
+        IF(aa.so_status='0','ON DISPATCH',IF(aa.so_status='1','RECEIVED','PENDING')) `status`,
+        aa.so_clinic,
+        aa.so_remarks,
+        aa.so_received_by,
+        aa.so_received_at,
+        aa.created_by,
+        aa.created_at
+        FROM appointment_lab_test AS aa
+        LEFT JOIN appointment_entries AS bb ON bb.id = aa.control_id
+        LEFT JOIN patients AS cc ON cc.id = bb.patient_id
+        LEFT JOIN laboratory_submodule AS dd ON dd.id = aa.lab_id
+        LEFT JOIN laboratory_module AS ee ON ee.id = dd.mod_id
+        WHERE ee.send_out = '1' AND DATE(bb.created_at) = date('".$post['date']."')";
+        $result = $this->db->query($str);
+
+        if($result->num_rows() > 0){
+            $result = array(
+                'status' => true,
+                'results' => $result->result_array()
+            );
+        }else{
+            $result = array(
+                'status' => false,
+                'results' => []
+            );
+        }
+
+        echo json_encode($result);
     }
 }

@@ -54,7 +54,8 @@ class Employee extends REST_Controller {
             'philhealth_no' => $post['philhealth_no'],
             'ordinary_restday' => $post['ordinary_restday'],
             'original_restday' => $post['original_restday'],
-            'ws_code' => $post['ws_code']
+            'ws_code' => $post['ws_code'],
+            'license_no' => $post['license_no']
         );
         $employee = $this->builder->create_insert($employee);
 
@@ -125,7 +126,8 @@ class Employee extends REST_Controller {
             'philhealth_no' => $post['philhealth_no'],
             'ordinary_restday' => $post['ordinary_restday'],
             'original_restday' => $post['original_restday'],
-            'ws_code' => $post['ws_code']
+            'ws_code' => $post['ws_code'],
+            'license_no' => $post['license_no']
         );
         $employee['filters'] = array('id' => $post['id']);
         $employee = $this->builder->create_update($employee);

@@ -154,6 +154,7 @@ class Appointment extends REST_Controller {
         $data['patient'] = json_decode($this->input->post('patient_info'));
         $data['results'] = json_decode($this->input->post('results'));
         $data['header'] = $this->db->get('dm_company_info')->row_array();
+        $data['employee'] = $this->db->get_where('employee_view', array('id' => $user->id))->row_array();
 
         //print posting
         $post['user_id'] = $user->id;

@@ -58,7 +58,16 @@ class Mylib extends CI_Model{
     }
 
     public function get_active_yr(){
-        return $this->db->get_where('year', array('post' => ''))->row_array()['year'];
+		$year = $this->db->get_where('year', array('post' => ''))->row_array()['year'];
+		$str = "CREATE TABLE IF NOT EXISTS dm_pp{$year} LIKE dm_pp_template";
+		$this->db->query($str);
+		$str = "CREATE TABLE IF NOT EXISTS dtr_{$year} LIKE dtr_template";
+		$this->db->query($str);
+		$str = "CREATE TABLE IF NOT EXISTS mhr_{$year} LIKE mhr_template";
+		$this->db->query($str);
+		$str = "CREATE TABLE IF NOT EXISTS payslip_{$year} LIKE payslip_template";
+		$this->db->query($str);
+        return $year;
     }
     public function get_active_pp(){
         $year = $this->get_active_yr();

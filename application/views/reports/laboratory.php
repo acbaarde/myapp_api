@@ -52,8 +52,8 @@ $lnewpage = 0;
 	
 	$pdf->SetFont('Courier','',10);
 	$nrw = $nrw + $pagitan + 10;
-	$pdf->Text($acol[0],$nrw,"Patient Name: " .$patient->fullname);
-	$pdf->Text($acol[1],$nrw,"Physician: " .$patient->physician);
+	$pdf->Text($acol[0],$nrw,"Patient Name: ".utf8_decode($patient->fullname));
+	$pdf->Text($acol[1],$nrw,"Physician: " .utf8_decode($patient->physician));
 	$nrw = $nrw + $pagitan;
 	$pdf->Text($acol[0],$nrw,"Patient ID: " .$patient->patient_id);
 	$pdf->Text($acol[1],$nrw,"Date: " .$patient->date);
@@ -89,9 +89,9 @@ $lnewpage = 0;
 		foreach($results->lab_results as $row){
 			$pdf->Ln();
 			$pdf->SetX($acol_ed[0]);
-			$pdf->Cell($cols[0],8,$row->result_title,1,0,'C');
-			$pdf->Cell($cols[2],8,$row->result_value,1,0,'C');
-			$pdf->Cell($cols[1],8,$row->result_range,1,0,'C');
+			$pdf->Cell($cols[0],8,utf8_decode($row->result_title),1,0,'C');
+			$pdf->Cell($cols[2],8,utf8_decode($row->result_value),1,0,'C');
+			$pdf->Cell($cols[1],8,utf8_decode($row->result_range),1,0,'C');
 		}
 	}else{
 		$cols[0] = 97;

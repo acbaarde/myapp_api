@@ -173,7 +173,7 @@ class Data_maintenance extends REST_Controller {
         }elseif($status == 'change'){
             $str = "SELECT ifnull(SUM(balance),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
         }elseif($status == 'total_cash'){
-            $str = "SELECT ifnull(SUM(total_amount),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
+            $str = "SELECT ifnull(SUM(total_amount),'0.00') AS cnt FROM appointment_view WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
         }else{
             //ALL
             $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}')";

@@ -110,7 +110,7 @@ class Reports extends REST_Controller {
         aa.discount_percent,
         aa.cash,
         aa.total_amount
-        from appointment_entries as aa
+        from appointment_view as aa
         left join patients bb on bb.id = aa.patient_id
         left join physicians cc on cc.id = aa.physician_id
         left join dm_discount dd on dd.id = aa.discount_id
@@ -123,7 +123,7 @@ class Reports extends REST_Controller {
         $sum = "select
         sum(total_amount)as total_amount,
         sum(cash) as cash
-        from appointment_entries
+        from appointment_view
         where date(created_at) = date('".$post['date']."')
         and approved != 'N'";
         $sum = $this->db->query($sum)->row_array();

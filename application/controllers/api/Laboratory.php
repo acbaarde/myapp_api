@@ -92,7 +92,7 @@ class Laboratory extends REST_Controller {
         if($post['id'] == 'undefined'){
             $insert['table_name'] = 'laboratory_module';
             $insert['fields'] = array(
-                'title' => strtoupper($post['title']),
+                'title' => $post['title'],
                 'send_out' => $post['send_out'],
                 'created_by' => $post['user_id'],
                 'created_at' => $timestamp
@@ -105,7 +105,7 @@ class Laboratory extends REST_Controller {
         }else{
             $update['table_name'] = 'laboratory_module';
             $update['fields'] = array(
-                'title' => strtoupper($post['title']),
+                'title' => $post['title'],
                 'send_out' => $post['send_out'],
                 'updated_by' => $post['user_id'],
                 'updated_at' => $timestamp
@@ -129,9 +129,9 @@ class Laboratory extends REST_Controller {
             $update['table_name'] = 'laboratory_submodule';
             $update['fields'] = array(
                 'mod_id' => $post['mod_id'],
-                'title' => strtoupper($post['title']),
+                'title' => $post['title'],
                 'amount' => $post['amount'],
-                'abbr' => strtoupper($post['abbr']),
+                'abbr' => $post['abbr'],
                 'updated_by' => $post['user_id'],
                 'updated_at' => $timestamp
             );
@@ -145,9 +145,9 @@ class Laboratory extends REST_Controller {
             $insert['table_name'] = 'laboratory_submodule';
             $insert['fields'] = array(
                 'mod_id' => $post['mod_id'],
-                'title' => strtoupper($post['title']),
+                'title' => $post['title'],
                 'amount' => $post['amount'],
-                'abbr' => strtoupper($post['abbr']),
+                'abbr' => $post['abbr'],
                 'created_by' => $post['user_id'],
                 'created_at' => $timestamp
             );
@@ -168,8 +168,8 @@ class Laboratory extends REST_Controller {
             $update['table_name'] = 'laboratory_subsubmodule';
             $update['fields'] = array(
                 'mod_id' => $post['mod_id'],
-                'submod_id' => strtoupper($post['submod_id']),
-                'title' => strtoupper($post['title']),
+                'submod_id' => $post['submod_id'],
+                'title' => $post['title'],
                 'result_range' => $post['result_range'],
                 'updated_by' => $post['user_id'],
                 'updated_at' => $timestamp
@@ -184,8 +184,8 @@ class Laboratory extends REST_Controller {
             $insert['table_name'] = 'laboratory_subsubmodule';
             $insert['fields'] = array(
                 'mod_id' => $post['mod_id'],
-                'submod_id' => strtoupper($post['submod_id']),
-                'title' => strtoupper($post['title']),
+                'submod_id' => $post['submod_id'],
+                'title' => $post['title'],
                 'result_range' => $post['result_range'],
                 'created_by' => $post['user_id'],
                 'created_at' => $timestamp

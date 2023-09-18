@@ -24,7 +24,7 @@ class Patient_model extends CI_Model{
             'agetype' => $agetype,
             'gender' => $gender,
             'contact' => $contact,
-            'address' => strtoupper($address),
+            'address' => $address,
             'created_at' => $created_at,
             'created_by' => $created_by
         );
@@ -67,7 +67,7 @@ class Patient_model extends CI_Model{
             'agetype' => $agetype,
             'gender' => $gender,
             'contact' => $contact,
-            'address' => strtoupper($address),
+            'address' => $address,
             'updated_at' => $updated_at,
             'updated_by' => $updated_by
         );

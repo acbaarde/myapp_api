@@ -78,7 +78,7 @@ class Reports_model extends CI_Model{
         aa.created_at
         from appointment_entries aa
         left join patients bb on bb.id = aa.patient_id
-        where aa.discount_id = ''
+        where (aa.discount_id = '' OR aa.discount_id = 0 OR aa.discount_id IS NULL)
         and aa.discount_percent = 0
         and aa.approved != 'N'
         and aa.physician_id = '". $post['id'] ."'
@@ -117,7 +117,7 @@ class Reports_model extends CI_Model{
         FROM appointment_entries aa
         LEFT JOIN physicians bb ON bb.id = aa.physician_id
         LEFT JOIN patients cc ON cc.id = aa.patient_id
-        WHERE aa.discount_id = ''
+        WHERE (aa.discount_id = '' OR aa.discount_id = 0 OR aa.discount_id IS NULL)
         AND aa.discount_percent = 0
         AND aa.approved != 'N'
         AND physician_id = '".$post['id']."'
@@ -144,7 +144,7 @@ class Reports_model extends CI_Model{
         $str = "
         select SUM(total_amount)AS `total` FROM appointment_entries
         WHERE physician_id = '".$post['id']."'
-        AND discount_id = ''
+        AND (discount_id = '' or discount_id = 0 or discount_id is null)
         AND discount_percent = 0
         AND approved != 'N'
         AND DATE(created_at) >= DATE('".$post['dateFrom']."') 

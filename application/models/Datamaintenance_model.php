@@ -8,12 +8,12 @@ class Datamaintenance_model extends CI_Model{
 
         $physician['table_name'] = 'physicians';
         $physician['fields'] = array(
-            'firstname' => strtoupper($post['firstname']),
-            'lastname' => strtoupper($post['lastname']),
-            'middlename' => strtoupper($post['middlename']),
+            'firstname' => $post['firstname'],
+            'lastname' => $post['lastname'],
+            'middlename' => $post['middlename'],
             'gender' => $post['gender'],
             'contact' => $post['contact'],
-            'address' => strtoupper($post['address']),
+            'address' => $post['address'],
             'created_by' => $post['user_id'],
             'created_at' => $timestamp
         );
@@ -41,12 +41,12 @@ class Datamaintenance_model extends CI_Model{
 
         $physician['table_name'] = 'physicians';
         $physician['fields'] = array(
-            'firstname' => strtoupper($post['firstname']),
-            'lastname' => strtoupper($post['lastname']),
-            'middlename' => strtoupper($post['middlename']),
+            'firstname' => $post['firstname'],
+            'lastname' => $post['lastname'],
+            'middlename' => $post['middlename'],
             'gender' => $post['gender'],
             'contact' => $post['contact'],
-            'address' => strtoupper($post['address']),
+            'address' => $post['address'],
             'updated_by' => $post['user_id'],
             'updated_at' => $timestamp
         );

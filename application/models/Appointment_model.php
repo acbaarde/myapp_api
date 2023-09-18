@@ -226,7 +226,7 @@ class Appointment_model extends CI_Model{
 
     public function save_result_entry($data){
         $post = $data['lab_results'];
-        $rmks = strtoupper($data['result_remarks']);
+        $rmks = $data['result_remarks'];
         $labtestid = $data['lab_test_id'];
         $arr = json_decode($post, true);
         $this->db->trans_begin();
@@ -235,7 +235,7 @@ class Appointment_model extends CI_Model{
         foreach($arr as $rw){
             array_push($chckval, empty($rw['result_value']) ? is_numeric($rw['result_value']) ? 0 : 1 : 0); 
             $fields = array(
-                'result_value' => strtoupper($rw['result_value'])
+                'result_value' => $rw['result_value']
             );
             $this->db->update('appointment_lab_results', $fields, array('id' => $rw['id']));
         }
@@ -268,7 +268,7 @@ class Appointment_model extends CI_Model{
         $this->db->trans_begin();
         $fields = array(
             'status'=>'C',
-            'cancel_reason' => strtoupper($post['cancel_reason']),
+            'cancel_reason' => $post['cancel_reason'],
             'cancelled_by' => $post['user_id'],
             'cancelled_at' => $timestamp
         );
@@ -417,8 +417,8 @@ class Appointment_model extends CI_Model{
         $this->db->trans_begin();
         $fields = array(
             'status' => $post['status'] == '1' ? 'D' : '',
-            'so_clinic' => strtoupper($post['clinic']),
-            'so_remarks' => strtoupper($post['remarks']),
+            'so_clinic' => $post['clinic'],
+            'so_remarks' => $post['remarks'],
             'so_status' => $post['status'],
             'so_received_by' => $post['user_id'],
             'so_received_at' => $post['status'] == '1' ? $timestamp : '0000-00-00 00:00:00'

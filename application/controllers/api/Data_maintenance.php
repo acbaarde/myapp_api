@@ -122,7 +122,8 @@ class Data_maintenance extends REST_Controller {
         $results['completed'] = $this->appointment_count('completed');
         $results['cash'] = $this->appointment_count('cash');
         $results['change'] = $this->appointment_count('change');
-        $results['total_cash'] = $this->appointment_count('total_cash');
+        $results['total_sendout'] = $this->appointment_count('total_sendout');
+        $results['total_balc'] = $this->appointment_count('total_balc');
         echo json_encode($results);
     }
     function getforreleased(){
@@ -172,8 +173,11 @@ class Data_maintenance extends REST_Controller {
             $str = "SELECT ifnull(SUM(cash),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
         }elseif($status == 'change'){
             $str = "SELECT ifnull(SUM(balance),'0.00') AS cnt FROM appointment_entries WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
-        }elseif($status == 'total_cash'){
-            $str = "SELECT ifnull(SUM(total_amount),'0.00') AS cnt FROM appointment_view WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
+        }elseif($status == 'total_sendout'){
+            // $str = "SELECT ifnull(SUM(total_amount),'0.00') AS cnt FROM appointment_view WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
+            $str = "SELECT ifnull(SUM(amount),'0.00') AS cnt FROM appointment_sendout_view";
+        }elseif($status == 'total_balc'){
+            $str = "SELECT ifnull(IF(SUM(cash) - SUM(total_amount) > 0, 0 , SUM(total_amount)-SUM(cash)),'0.00') as cnt FROM appointment_view WHERE `status` != 'C' and DATE(created_at) = DATE('{$today}')";
         }else{
             //ALL
             $str = "select count(id)as cnt from appointment_entries where date(created_at) = date('{$today}')";

@@ -72,7 +72,7 @@ class Reports extends REST_Controller {
                     'firstname' => $physician['firstname'],
                     'middlename' => $physician['middlename'],
                     'lastname' => $physician['lastname'],
-                    'total' => $amnt,
+                    'total' => number_format(round(floatval($amnt),2),2),
                     'total_rebates' => number_format(round(floatval($amnt) * 0.10,2),2),
                     'rebates' => $this->reportsmodel->rebates($post),
                     'breakdown' => $this->reportsmodel->rebates_brkdwn($post)
@@ -169,7 +169,8 @@ class Reports extends REST_Controller {
         LEFT JOIN patients AS cc ON cc.id = bb.patient_id
         LEFT JOIN laboratory_submodule AS dd ON dd.id = aa.lab_id
         LEFT JOIN laboratory_module AS ee ON ee.id = dd.mod_id
-        WHERE ee.send_out = '1' AND DATE(bb.created_at) = date('".$post['date']."')";
+        WHERE ee.send_out = '1' AND DATE(bb.created_at) = date('".$post['date']."')
+        AND bb.status != 'C'";
         $result = $this->db->query($str);
 
         if($result->num_rows() > 0){

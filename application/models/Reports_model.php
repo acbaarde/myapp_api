@@ -74,9 +74,10 @@ class Reports_model extends CI_Model{
         bb.middlename,
         bb.age,
         bb.gender,
-        sum(aa.total_amount)as total_amount,
+        sum(cc.amount)as total_amount,
         aa.created_at
         from appointment_entries aa
+        left join appointment_lab_test cc on cc.control_id = aa.id
         left join patients bb on bb.id = aa.patient_id
         where (aa.discount_id = '' OR aa.discount_id = 0 OR aa.discount_id IS NULL)
         and aa.discount_percent = 0
@@ -84,6 +85,7 @@ class Reports_model extends CI_Model{
         and aa.physician_id = '". $post['id'] ."'
         and date(aa.created_at) >= date('". $post['dateFrom'] ."')
         and date(aa.created_at) <= date('". $post['dateTo'] ."')
+        and cc.so_status != 1
         group by date(aa.created_at)
         order by date(aa.created_at)";
         $query = $this->db->query($str);
@@ -112,23 +114,26 @@ class Reports_model extends CI_Model{
         cc.age,
         cc.agetype,
         cc.gender,
-        aa.total_amount,
+        sum(dd.amount) as total_amount,
         DATE(aa.created_at)AS `date`
         FROM appointment_entries aa
         LEFT JOIN physicians bb ON bb.id = aa.physician_id
         LEFT JOIN patients cc ON cc.id = aa.patient_id
+        left join appointment_lab_test dd on dd.control_id = aa.id
         WHERE (aa.discount_id = '' OR aa.discount_id = 0 OR aa.discount_id IS NULL)
         AND aa.discount_percent = 0
         AND aa.approved != 'N'
         AND physician_id = '".$post['id']."'
         AND DATE(aa.created_at) >= DATE('".$post['dateFrom']."')
         AND DATE(aa.created_at) <= DATE('".$post['dateTo']."')
+        and dd.so_status != 1
+        group by aa.id
         ORDER BY aa.physician_id,DATE(aa.created_at)";
         $results = $this->db->query($str)->result_array();
 
         $arr = [];
         foreach($results as $row){
-            $lab_tests = $this->db->query("select abbr from appointment_lab_test where control_id = '".$row['id']."' ")->result_array();
+            $lab_tests = $this->db->query("select abbr from appointment_lab_test where control_id = '".$row['id']."' and so_status != 1 ")->result_array();
             $arrLab = [];
             foreach($lab_tests as $rw){
                 array_push($arrLab, $rw['abbr']);
@@ -142,13 +147,15 @@ class Reports_model extends CI_Model{
     public function total_rebates($data=array()){
         $post = $data;
         $str = "
-        select SUM(total_amount)AS `total` FROM appointment_entries
-        WHERE physician_id = '".$post['id']."'
-        AND (discount_id = '' or discount_id = 0 or discount_id is null)
-        AND discount_percent = 0
-        AND approved != 'N'
-        AND DATE(created_at) >= DATE('".$post['dateFrom']."') 
-        AND DATE(created_at) <= DATE('".$post['dateTo']."')";
+        SELECT SUM(amount) AS `total` FROM appointment_entries AS ent
+        LEFT JOIN appointment_lab_test AS lab ON lab.control_id = ent.id
+        WHERE ent.physician_id = '".$post['id']."'
+        AND (ent.discount_id = '' or ent.discount_id = 0 or ent.discount_id is null)
+        AND ent.discount_percent = 0
+        AND ent.approved != 'N'
+        AND DATE(ent.created_at) >= DATE('".$post['dateFrom']."') 
+        AND DATE(ent.created_at) <= DATE('".$post['dateTo']."')
+        and lab.so_status != 1";
         return $this->db->query($str)->row_array()['total'];
     }
 

@@ -57,7 +57,10 @@ class Menu extends REST_Controller {
     // }
 
     public function moduleMenu_get(){
-        $str = "select * from mod_menu order by mod_title";
+        // $str = "select * from mod_menu order by mod_title";
+        $str = "SELECT aa.*,bb.order FROM mod_menu AS aa 
+        LEFT JOIN module_menu_sort bb ON bb.mod_id = aa.id
+        ORDER BY bb.order, aa.mod_title";
         echo json_encode($this->db->query($str)->result_array());
     }
 
